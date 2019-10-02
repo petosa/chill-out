@@ -95,6 +95,8 @@ model = alexnet.alexnet(pretrained=True)
 # gradual unfreezing
 model.train()
 criterion = F.cross_entropy
+if args.cuda:
+    model.cuda()
 optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay)
 policy = [[False]*(8-i) + [True]*i for i in range(1,9)]
 # policy = [
