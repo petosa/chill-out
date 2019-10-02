@@ -1,18 +1,21 @@
 from search import Search
+from collections import deque
 
 class BFS(Search):
 
     def __init__(self, env):
         super().__init__(env)
+        self.frontier = deque()
+        self.frontier.append(env.initial_state)
         
-    def visit(self):
+    def next(self):
         if len(self.frontier) > 0:
-            state = self.frontier[0]
-            del self.frontier[0]
-            self.visited.add(state)
-            neighbors = [n for n in self.graph(state) if n not in self.visited]
+            state = self.frontier.pop()
+            neighbors = self.graph(state)
             self.frontier += neighbors
             return state, self.evaluate(state)
+
+
 
 
 
