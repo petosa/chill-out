@@ -1,13 +1,14 @@
 from bfs import BFS
+from visitbfs import VisitBFS
 from intspace import IntSpace
 from knapsack import Knapsack
 
-env = Knapsack(50)   
-search = BFS(env)
+env = IntSpace()   
+search = VisitBFS(env)
 
 s, v = None, None
 iters = 0
-for _ in range(500000):
+for _ in range(1000000):
     if iters % 5000 == 0:
         print(iters, len(search.frontier))
     iters += 1
@@ -18,8 +19,5 @@ for _ in range(500000):
         s, v = state, val
 
 print(iters, "iter", s, "state", v, "val")
-#for t in search.trace(s):
-#    print(t)
-#print(search.trace(15))
-
-
+for t in search.trace(s):
+    print(t, "\n")

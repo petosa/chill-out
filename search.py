@@ -2,17 +2,18 @@ class Search():
 
     # Graph is a function mapping a state to its neighbors.
     def __init__(self, env):
-        self.graph = env.graph
-        self.evaluate = env.evaluate
-        self.initial_state = env.initial_state
-        self.history = env.history
+        self.env = env
+        self.history = set()
 
     def next(self):
         raise NotImplementedException
 
+    def hook(self, state, parent):
+        self.history.add((state, parent))
+
     def trace(self, state):
         curr, trace = state, [state]
-        while curr is not self.initial_state:
+        while curr is not self.env.initial_state:
             found = False
             for pair in self.history:
                 if pair[0] is curr:
