@@ -1,5 +1,4 @@
 def get_chain_thaw_policy():
-    # This is done as follows:
     # 1) Freeze every layer except the last (softmax) layer and train it.
     # 2) Freeze every layer except the first layer and train it.
     # 3) Freeze every layer except the second etc., until the second last layer.
