@@ -1,3 +1,4 @@
+import time
 import alexnet
 import torch
 from torch import nn
@@ -13,17 +14,17 @@ from policies.chain_thaw import get_chain_thaw_policy
 
 
 class PolicyEvaluator:
-    def __init__(self, lr=1e-4, momentum=.9, weight_decay=0, batch_size=256,
-                    epochs=10, model=None, epochs_between_states=10, 
+    def __init__(self, model_class=alexnet.AlexNet, lr=1e-4, momentum=.9, weight_decay=0, batch_size=256,
+                    epochs=10, epochs_between_states=10, 
                     val_percentage=.2, no_cuda=False, seed=None, 
                     log_interval=10, cifar10_dir="data"):
-        #Load data
+
+        self.model_class = model_class
         self.lr = lr
         self.momentum = momentum
         self.weight_decay = weight_decay
         self.batch_size = batch_size
         self.epochs = epochs
-        self.model = model
         self.epochs_between_states = epochs_between_states
         self.val_percentage = val_percentage
         self.cuda = not no_cuda and torch.cuda.is_available()
@@ -36,6 +37,7 @@ class PolicyEvaluator:
         self.load_cifar()
     
     def load_cifar(self):
+        #Load data
         transform = torchvision.transforms.Compose(
             [torchvision.transforms.Resize((224, 224)),
             torchvision.transforms.ToTensor(),
@@ -74,18 +76,21 @@ class PolicyEvaluator:
         self.n_classes = 10
 
 
-    def train(self, policy_step):
-        if self.model == None:
+    def train(self, model_path, policy_step):
+        model = self.model_class()
+        state_dict = torch.load(model_path)
+        model.load_state_dict(state_dict)
+        if model == None:
             print("model not specified")
             return 0.0
-        self.model.train()
+        model.train()
         criterion = F.cross_entropy
         if self.cuda:
-            self.model.cuda()
-        optimizer = optim.SGD(self.model.parameters(), lr=self.lr, momentum=self.momentum, weight_decay=self.weight_decay)
-        print(self.model)
+            model.cuda()
+        optimizer = optim.SGD(model.parameters(), lr=self.lr, momentum=self.momentum, weight_decay=self.weight_decay)
+        print(model)
         # model.named_parameters = [layer1.weight, layer1.bias, layer2.weight....]
-        for i, (layer, w) in enumerate(self.model.named_parameters()):
+        for i, (layer, w) in enumerate(model.named_parameters()):
             w.requires_grad = policy_step[i // 2] # weight and bias are in named_parameters, not in policy
         print ("Current Policy : " + str(policy_step))
         for i in range(self.epochs):
@@ -93,16 +98,17 @@ class PolicyEvaluator:
                 images, targets = Variable(batch[0]), Variable(batch[1])
                 if self.cuda:
                     images, targets = images.cuda(), targets.cuda()
-                self.model.zero_grad()
-                output = self.model(images)
+                model.zero_grad()
+                output = model(images)
                 loss = criterion(output, targets)
                 loss.backward()
                 optimizer.step()
             print ("Epoch : " + str(i))
         accuracy = 0.0
         #TODO: accuracy
-        return accuracy
-        torch.save(self.model.state_dict(), 'model.pt')
+        child_filename = str(time.time()) + '.pt'
+        torch.save(model.state_dict(), child_filename)
+        return child_filename, accuracy
 
 
     
