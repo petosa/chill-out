@@ -8,6 +8,8 @@ import torchvision
 import numpy as np
 import argparse
 from torch.utils.data.sampler import SubsetRandomSampler
+from policies.gradual_unfreezing import get_gradual_unfreezing_policy
+from policies.chain_thaw import get_chainthaw_policy
 
 parser = argparse.ArgumentParser(description='Chill-out')
 # Hyperparameters
@@ -98,7 +100,8 @@ criterion = F.cross_entropy
 if args.cuda:
     model.cuda()
 optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay)
-policy = [[False]*(8-i) + [True]*i for i in range(1,9)]
+policy = get_gradual_unfreezing_policy()
+#policy = get_chainthaw_policy()
 # policy = [
 #     [False]*7 + [True],
 #     [False]*6 + [True]*2,
