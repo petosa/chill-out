@@ -1,4 +1,4 @@
-from env import Environment
+from env.env import Environment
 from train import PolicyEvaluator
 import time
 import alexnet
@@ -19,7 +19,7 @@ class PolicyEnv(Environment):
 
     def get_children(self, state):
         children = [(state[0][0:i] + tuple([not state[0][i]]) + state[0][i+1:], self.model_id + i + 1, state[1]) for i in range(len(state[0]))]
-        children.append(state[0][:], self.model_id + len(children) + 1, state[1])
+        children.append(((state[0][:], self.model_id + len(children) + 1, state[1])))
         new_children = []
         for child in children:
             if any(child[0]):

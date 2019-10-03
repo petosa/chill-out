@@ -1,5 +1,4 @@
-from bfs import BFS
-from intspace import IntSpace
+from search.bfs import BFS
 from policyenv import PolicyEnv
 
 env = PolicyEnv(num_layers=8)
