@@ -12,7 +12,7 @@ class BFS(Search):
     def next(self):
         if len(self.frontier) > 0:
             state = self.frontier.popleft()
-            neighbors = self.env.graph(state)
+            neighbors = self.env.get_children(state)
             self.frontier += neighbors
             [self.hook(n, state) for n in neighbors]
             return state, self.env.evaluate(state)

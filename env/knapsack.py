@@ -15,7 +15,7 @@ class Knapsack(Environment):
             print("Average value: {}, average weight: {}".format(avg_value, avg_weight))
         self.limit = weight_limit
 
-    def graph(self, state):
+    def get_children(self, state):
         current_weight = sum([i[1] for i in state])
         neighbors = [tuple(sorted(list(state) + [i])) for i in self.items if i not in state and current_weight + i[1] < self.limit]
         return neighbors

@@ -12,7 +12,7 @@ class VisitBFS(Search):
     def next(self):
         if len(self.frontier) > 0:
             state = self.frontier.popleft()
-            neighbors = self.env.graph(state)
+            neighbors = self.env.get_children(state)
             neighbors = [n for n in neighbors if n not in self.visited]
             self.visited.update(set(neighbors))
             self.frontier += neighbors
