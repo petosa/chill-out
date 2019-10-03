@@ -1,6 +1,7 @@
 import time
 import alexnet
 import torch
+import random
 from torch import nn
 from torch.autograd import Variable
 import torch.nn.functional as F
@@ -8,16 +9,34 @@ import torch.optim as optim
 import torchvision
 import numpy as np
 import argparse
+import os
 from torch.utils.data.sampler import SubsetRandomSampler
 from policies.gradual_unfreezing import get_gradual_unfreezing_policy
 from policies.chain_thaw import get_chain_thaw_policy
 
+def seed_torch(seed=0):
+    random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed) # if you are using multi-GPU.
+    torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.deterministic = True
+
+seed_torch()
+def _init_fn():
+    np.random.seed(0)
+
 class PolicyEvaluator:
     def __init__(self, model_class=alexnet.AlexNet, lr=1e-4, momentum=.9, weight_decay=0, batch_size=256,
-                    epochs=10, epochs_between_states=10, 
-                    val_percentage=.2, no_cuda=False, seed=1, 
+                    epochs=1, epochs_between_states=10, 
+                    val_percentage=.2, no_cuda=False, seed=0, 
                     log_interval=10, cifar10_dir="data", log_file="log.txt", verbose=False):
-
+        self.save_dir = str(time.time()) + '/'
+        os.mkdir(self.save_dir)
+        os.mkdir(self.save_dir + 'logs/')
+        os.mkdir(self.save_dir + 'models/')
         self.log_file = log_file
         self.model_class = model_class
         self.verbose = verbose
@@ -30,14 +49,15 @@ class PolicyEvaluator:
         self.val_percentage = val_percentage
         self.cuda = not no_cuda and torch.cuda.is_available()
         self.seed = seed
-        if self.cuda:
-            torch.cuda.manual_seed(self.seed)
+
+        # make deterministic
+        seed_torch(seed=self.seed)
         
         self.log_interval = log_interval
         self.cifar10_dir = cifar10_dir
         self.load_cifar()
 
-        with open(self.log_file, "a+") as fh:
+        with open(self.save_dir + self.log_file, "a+") as fh:
             fh.write('num_epoch, train_loss, train_acc, valid loss, valid_test\n')
     
     def load_cifar(self):
@@ -60,11 +80,11 @@ class PolicyEvaluator:
         val_sampler = SubsetRandomSampler(val_idx)
         self.train_loader = torch.utils.data.DataLoader(
             trainset, batch_size=self.batch_size, sampler=train_sampler,
-            num_workers=2, pin_memory=True,
+            num_workers=0, pin_memory=True, worker_init_fn=_init_fn,
         )
         self.val_loader = torch.utils.data.DataLoader(
             trainset, batch_size=self.batch_size, sampler=val_sampler,
-            num_workers=2, pin_memory=True,
+            num_workers=0, pin_memory=True, worker_init_fn=_init_fn,
         )
 
         testset = torchvision.datasets.CIFAR10(self.cifar10_dir, train=False,
@@ -72,7 +92,7 @@ class PolicyEvaluator:
 
         self.test_loader = torch.utils.data.DataLoader(
             testset, batch_size=self.batch_size, shuffle=True,
-            num_workers=2, pin_memory=True,
+            num_workers=0, pin_memory=True, worker_init_fn=_init_fn,
         )
 
         self.classes = ('plane', 'car', 'bird', 'cat',
@@ -82,21 +102,23 @@ class PolicyEvaluator:
 
 
     def train(self, model_path, destination_model_path, policy_step):
-        with open(self.log_file, "a+") as fh:
+        with open(self.save_dir + self.log_file, "a+") as fh:
             fh.write(model_path + '\n')
             fh.write(str(policy_step) + '\n')
 
         model = self.model_class(num_classes=self.n_classes)
-        state_dict = torch.load(model_path)
+        print (model_path)
+        state_dict = torch.load(self.save_dir + model_path)
         model.load_state_dict(state_dict)
 
         if self.verbose:
-            print ('Model reloaded from: {}'.format(model_path))
+            print ('Model reloaded from: {}'.format(self.save_dir + model_path))
             print(model)
             print ("Current Policy : " + str(policy_step))
         if self.cuda:
             model.cuda()
-        optimizer = optim.SGD(model.parameters(), lr=self.lr, momentum=self.momentum, weight_decay=self.weight_decay)
+        optimizer = optim.Adam(model.parameters())
+        #optimizer = optim.SGD(model.parameters(), lr=self.lr, momentum=self.momentum, weight_decay=self.weight_decay)
 
         # model.named_parameters = [layer1.weight, layer1.bias, layer2.weight....]
         for i, (layer, w) in enumerate(model.named_parameters()):
@@ -115,23 +137,24 @@ class PolicyEvaluator:
 
             train_loss, train_acc = self.evaluate(model, 'train')
             val_loss, val_acc = self.evaluate(model, 'val')
-            with open(self.log_file, "a+") as fh:
+            with open(self.save_dir + self.log_file, "a+") as fh:
                 fh.write('{},{:.6f},{},{:.6f},{}\n'.format(i+1, train_loss, train_acc, val_loss, val_acc))
             if self.verbose:
                 print('Train Epoch: {} \t'
                   'Train Loss: {:.6f}\tVal Loss: {:.6f}\tVal Acc: {}'.format(
                 i + 1, train_loss, val_loss, val_acc))
-        test_loss, test_acc = self.evaluate(model, 'test', verbose=True)
+        val_loss, val_acc = self.evaluate(model, 'val')
+        #test_loss, test_acc = self.evaluate(model, 'test', verbose=True)
 
         
-        torch.save(model.state_dict(), destination_model_path)
+        torch.save(model.state_dict(), self.save_dir + destination_model_path)
         if self.verbose:
-            print ('New model saved at: {}'.format(destination_model_path))
-        with open(self.log_file, "a+") as fh:
-            fh.write('Model saved at {}\n'.format(destination_model_path))
-            fh.write('Test Loss: {:.6f}, Test Acc: {}\n'.format(test_loss, test_acc))
+            print ('New model saved at: {}'.format(self.save_dir + destination_model_path))
+        with open(self.save_dir + self.log_file, "a+") as fh:
+            fh.write('Model saved at {}\n'.format(self.save_dir + destination_model_path))
+            fh.write('Final Valid Loss: {:.6f}, Final Valid Acc: {}\n'.format(val_loss, val_acc))
 
-        return test_loss
+        return val_acc
 
 
     def evaluate(self, model, split, verbose=False, n_batches=None):
