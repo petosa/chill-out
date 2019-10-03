@@ -1,4 +1,4 @@
-from search import Search
+from search.search import Search
 from collections import deque
 
 class VisitBFS(Search):

@@ -1,4 +1,4 @@
-from env import Environment
+from .env import Environment
 from random import Random
 
 class Knapsack(Environment):

@@ -1,4 +1,4 @@
-from env import Environment
+from .env import Environment
 
 class IntSpace(Environment):
 
@@ -8,7 +8,7 @@ class IntSpace(Environment):
         self.goal = goal
 
     def graph(self, state):
-        return [state-10, state-7, state+7, state+10]
+        return [x for x in [state-10, state-7, state+7, state+10] if abs(x) < 5000]
         
     def evaluate(self, state):
         return abs(state - self.goal)

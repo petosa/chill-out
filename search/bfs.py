@@ -1,5 +1,6 @@
-from search import Search
+from .search import Search
 from collections import deque
+
 
 class BFS(Search):
 
