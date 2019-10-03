@@ -3,7 +3,7 @@ from visitbfs import VisitBFS
 from intspace import IntSpace
 from knapsack import Knapsack
 
-env = IntSpace()   
+env = IntSpace()
 search = VisitBFS(env)
 
 s, v = None, None

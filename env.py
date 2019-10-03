@@ -5,7 +5,7 @@ class Environment:
         self.initial_state = initial_state
 
     def graph(self, state):
-        raise NotImplementedException
+        raise NotImplementedError
         
     def evaluate(self, state):
-        raise NotImplementedException
+        raise NotImplementedError

@@ -6,7 +6,7 @@ class Search():
         self.history = set()
 
     def next(self):
-        raise NotImplementedException
+        raise NotImplementedError
 
     def hook(self, state, parent):
         self.history.add((state, parent))
