@@ -13,8 +13,9 @@ class PolicyEnv(Environment):
         model = model_class(pretrained=True)
         self.model_id = 0
         self.starting_model_name = 'models/0.pt'
-        torch.save(model.state_dict(), self.starting_model_name)
-        self.evaluator = PolicyEvaluator(model_class=model_class, verbose=True)
+        self.evaluator = PolicyEvaluator(epochs=1, model_class=model_class, verbose=True)
+        torch.save(model.state_dict(), self.evaluator.save_dir + self.starting_model_name)
+
         
 
     def get_children(self, state):
@@ -30,6 +31,6 @@ class PolicyEnv(Environment):
     def evaluate(self, state):
         if not any(state[0]):
             return 99999999
-        loss = self.evaluator.train('models/' + str(state[2]) + '.pt', state[1], state[0])
+        loss = self.evaluator.train('models/' + str(state[2]) + '.pt', 'models/' + str(state[1]) + '.pt', state[0])
         return loss
         
