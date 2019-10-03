@@ -12,14 +12,14 @@ from torch.utils.data.sampler import SubsetRandomSampler
 from policies.gradual_unfreezing import get_gradual_unfreezing_policy
 from policies.chain_thaw import get_chain_thaw_policy
 
-
 class PolicyEvaluator:
     def __init__(self, model_class=alexnet.AlexNet, lr=1e-4, momentum=.9, weight_decay=0, batch_size=256,
                     epochs=10, epochs_between_states=10, 
-                    val_percentage=.2, no_cuda=False, seed=None, 
-                    log_interval=10, cifar10_dir="data"):
+                    val_percentage=.2, no_cuda=False, seed=1, 
+                    log_interval=10, cifar10_dir="data", verbose=False):
 
         self.model_class = model_class
+        self.verbose = verbose
         self.lr = lr
         self.momentum = momentum
         self.weight_decay = weight_decay
@@ -77,14 +77,13 @@ class PolicyEvaluator:
 
 
     def train(self, model_path, policy_step):
-        model = self.model_class()
+
+        model = self.model_class(num_classes=self.n_classes)
         state_dict = torch.load(model_path)
         model.load_state_dict(state_dict)
-        if model == None:
-            print("model not specified")
-            return 0.0
-        model.train()
-        criterion = F.cross_entropy
+        if self.verbose:
+            print ('Model reloaded from: {}'.format(model_path))
+        self.criterion = F.cross_entropy
         if self.cuda:
             model.cuda()
         optimizer = optim.SGD(model.parameters(), lr=self.lr, momentum=self.momentum, weight_decay=self.weight_decay)
@@ -94,21 +93,62 @@ class PolicyEvaluator:
             w.requires_grad = policy_step[i // 2] # weight and bias are in named_parameters, not in policy
         print ("Current Policy : " + str(policy_step))
         for i in range(self.epochs):
+            model.train()
             for batch_idx, batch in enumerate(self.train_loader):
                 images, targets = Variable(batch[0]), Variable(batch[1])
                 if self.cuda:
                     images, targets = images.cuda(), targets.cuda()
                 model.zero_grad()
                 output = model(images)
-                loss = criterion(output, targets)
+                loss = self.criterion(output, targets)
                 loss.backward()
                 optimizer.step()
-            print ("Epoch : " + str(i))
-        accuracy = 0.0
-        #TODO: accuracy
-        child_filename = str(time.time()) + '.pt'
+            #print ("Epoch : " + str(i))
+            val_loss, val_acc = self.evaluate(model, 'val')
+            if self.verbose:
+                print('Train Epoch: {} \t'
+                  'Train Loss: {:.6f}\tVal Loss: {:.6f}\tVal Acc: {}'.format(
+                i + 1, loss.data, val_loss, val_acc))
+        test_loss, test_acc = self.evaluate(model, 'test', verbose=True)
+
+        child_filename = 'models/' + str(time.time()) + '.pt'
         torch.save(model.state_dict(), child_filename)
-        return child_filename, accuracy
+        if self.verbose:
+            print ('New model saved at: {}'.format(child_filename))
+
+        return child_filename, test_acc
+
+
+    def evaluate(self, model, split, verbose=False, n_batches=None):
+        model.eval()
+        loss = 0
+        correct = 0
+        n_examples = 0
+        if split == 'val':
+            loader = self.val_loader
+        elif split == 'test':
+            loader = self.test_loader
+        for batch_i, batch in enumerate(loader):
+            data, target = batch
+            if self.cuda:
+                data, target = data.cuda(), target.cuda()
+            with torch.no_grad():
+                data, target = Variable(data), Variable(target)
+            output = model(data)
+            loss += self.criterion(output, target, size_average=False).data
+            # predict the argmax of the log-probabilities
+            pred = output.data.max(1, keepdim=True)[1]
+            correct += pred.eq(target.data.view_as(pred)).cpu().sum()
+            n_examples += pred.size(0)
+            if n_batches and (batch_i >= n_batches):
+                break
+
+        loss /= n_examples
+        acc = 100. * correct / n_examples
+        if verbose:
+            print('\n{} set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
+                split, loss, correct, n_examples, acc))
+        return loss, acc
 
 
     

@@ -7,13 +7,13 @@ import alexnet
 
 policy = get_gradual_unfreezing_policy()
 model = alexnet.alexnet(pretrained=True)
-starting_model_name = str(time.time()) + '.pt'
+starting_model_name = 'models/' + str(time.time()) + '.pt'
 torch.save(model.state_dict(), starting_model_name)
-evaluator = PolicyEvaluator(model_class=alexnet.AlexNet)
+evaluator = PolicyEvaluator(model_class=alexnet.AlexNet, verbose=True)
 
-current_model = starting_model_name
+child_filename = starting_model_name
 for step in policy:
-    child_filename, accuracy = evaluator.train(current_model, step)
+    child_filename, accuracy = evaluator.train(child_filename, step)
     #Store filename, policystep + state, accuracy
 
 

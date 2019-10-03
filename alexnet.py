@@ -64,5 +64,5 @@ def alexnet(pretrained=False, progress=True, num_classes=10, **kwargs):
     
     #set_parameter_requires_grad(model_ft, feature_extract)
     model.classifier[6] = nn.Linear(model.classifier[6].in_features,num_classes)
-    input_size = 224
+    #input_size = 224
     return model
