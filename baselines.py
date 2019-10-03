@@ -5,16 +5,15 @@ from policies.chain_thaw import get_chain_thaw_policy
 import torch
 import alexnet
 
-policy = get_gradual_unfreezing_policy()
+#policy = get_gradual_unfreezing_policy()
 # policy = get_chain_thaw_policy()
-# policy = [[True]*8]
+policy = [[True]*8]
 model = alexnet.alexnet(pretrained=True)
 modelid = 0
 starting_model_name = 'models/' + str(modelid) + '.pt'
 log_file_name = 'logs/' + str(modelid) + '.txt'
 print ("Log File: {}".format(log_file_name))
-torch.save(model.state_dict(), starting_model_name)
-evaluator = PolicyEvaluator(model_class=alexnet.AlexNet, verbose=True, epochs=1, log_file=log_file_name)
+evaluator = PolicyEvaluator(model_class=alexnet.AlexNet, verbose=True, epochs=80, log_file=log_file_name)
 torch.save(model.state_dict(), evaluator.save_dir + starting_model_name)
 
 child_filename = starting_model_name

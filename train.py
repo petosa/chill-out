@@ -107,7 +107,6 @@ class PolicyEvaluator:
             fh.write(str(policy_step) + '\n')
 
         model = self.model_class(num_classes=self.n_classes)
-        print (model_path)
         state_dict = torch.load(self.save_dir + model_path)
         model.load_state_dict(state_dict)
 
@@ -146,9 +145,10 @@ class PolicyEvaluator:
         val_loss, val_acc = self.evaluate(model, 'val')
         #test_loss, test_acc = self.evaluate(model, 'test', verbose=True)
 
-        
+        torch.save(optimizer.state_dict(), self.save_dir + destination_model_path.split('/')[0] + '/optim' + destination_model_path.split('/')[1])
         torch.save(model.state_dict(), self.save_dir + destination_model_path)
         if self.verbose:
+            print ('New optimizer saved at: {}'.format(self.save_dir + destination_model_path.split('/')[0] + '/optim' + destination_model_path.split('/')[1]))
             print ('New model saved at: {}'.format(self.save_dir + destination_model_path))
         with open(self.save_dir + self.log_file, "a+") as fh:
             fh.write('Model saved at {}\n'.format(self.save_dir + destination_model_path))
