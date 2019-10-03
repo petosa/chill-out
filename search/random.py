@@ -9,19 +9,18 @@ class RandomRollout(Search):
         self.R = Random(seed)
         super().__init__(env)
         self.depth = depth
-        self.state = (self.env.initial_state, 1)
+        self.state = (self.env.initial_state, 0)
 
     def next(self):
         parent, d = self.state
         neighbors = self.env.get_children(parent)
-        if d >= self.depth or len(neighbors) == 0:
-            self.state = (self.env.initial_state, 1)
-            return self.next()
+        if d > self.depth or len(neighbors) == 0:
+            self.state = (self.env.initial_state, 0)
         else:
             curr = self.R.sample(neighbors, 1)[0]
             self.hook(curr, parent)
             self.state = (curr, d + 1)
-            return curr, self.env.evaluate(curr)
+        return parent, self.env.evaluate(parent)
 
 
 

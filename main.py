@@ -1,16 +1,17 @@
 from search.bfs import BFS
 from search.random import RandomRollout
 from search.greedybestfirst import GreedyBestFirst
+from search.beam import Beam
 
 from env.intspace import IntSpace
 from env.knapsack import Knapsack
 
-env = Knapsack()   
-search = BFS(env, visited_set=False)
+env = IntSpace()   
+search = GreedyBestFirst(env, visited_set=True)
 
 s, v = None, None
 iters = 0
-for i in range(3000):
+for i in range(35):
     if i % 10000 == 0:
         print("Step", i)
     iters += 1

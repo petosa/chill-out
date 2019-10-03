@@ -8,7 +8,7 @@ class Knapsack(Environment):
         initial_state = tuple([])
         super().__init__(initial_state)
         # Value, weight tuples
-        self.items = [(R.random()*max_value, R.random()*max_weight) for _ in range(items)]
+        self.items = [(round(R.random()*max_value,4), round(R.random()*max_weight,4)) for _ in range(items)]
         if verbose:
             avg_value = round(sum([i[0] for i in self.items])/len(self.items), 4)
             avg_weight = round(sum([i[1] for i in self.items])/len(self.items), 4)
