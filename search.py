@@ -1,6 +1,6 @@
 class Search():
 
-    # Graph is a function mapping a state to its neighbors.
+    # get_children is a function mapping a state to its neighbors.
     def __init__(self, env):
         self.env = env
         self.history = set()

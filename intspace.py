@@ -7,7 +7,7 @@ class IntSpace(Environment):
         super().__init__(initial_state)
         self.goal = goal
 
-    def graph(self, state):
+    def get_children(self, state):
         return [state-10, state-7, state+7, state+10]
         
     def evaluate(self, state):
