@@ -81,7 +81,7 @@ class PolicyEvaluator:
         self.criterion = F.cross_entropy
 
 
-    def train(self, model_path, policy_step):
+    def train(self, model_path, destination_model_path, policy_step):
         with open(self.log_file, "a+") as fh:
             fh.write(model_path + '\n')
             fh.write(str(policy_step) + '\n')
@@ -123,15 +123,15 @@ class PolicyEvaluator:
                 i + 1, train_loss, val_loss, val_acc))
         test_loss, test_acc = self.evaluate(model, 'test', verbose=True)
 
-        child_filename = 'models/' + str(time.time()) + '.pt'
-        torch.save(model.state_dict(), child_filename)
+        
+        torch.save(model.state_dict(), destination_model_path)
         if self.verbose:
-            print ('New model saved at: {}'.format(child_filename))
+            print ('New model saved at: {}'.format(destination_model_path))
         with open(self.log_file, "a+") as fh:
-            fh.write('Model saved at {}\n'.format(child_filename))
+            fh.write('Model saved at {}\n'.format(destination_model_path))
             fh.write('Test Loss: {:.6f}, Test Acc: {}\n'.format(test_loss, test_acc))
 
-        return child_filename, test_loss
+        return test_loss
 
 
     def evaluate(self, model, split, verbose=False, n_batches=None):

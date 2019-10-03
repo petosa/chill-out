@@ -1,0 +1,66 @@
+num_epoch, train_loss, train_acc, valid loss, valid_test
+num_epoch, train_loss, train_acc, valid loss, valid_test
+num_epoch, train_loss, train_acc, valid loss, valid_test
+num_epoch, train_loss, train_acc, valid loss, valid_test
+num_epoch, train_loss, train_acc, valid loss, valid_test
+num_epoch, train_loss, train_acc, valid loss, valid_test
+num_epoch, train_loss, train_acc, valid loss, valid_test
+num_epoch, train_loss, train_acc, valid loss, valid_test
+num_epoch, train_loss, train_acc, valid loss, valid_test
+models/3.pt
+(False, False, False, False, False, False, False, False)
+num_epoch, train_loss, train_acc, valid loss, valid_test
+models/0.pt
+(False, False, False, False, False, False, False, False)
+num_epoch, train_loss, train_acc, valid loss, valid_test
+models/0.pt
+(False, False, False, False, False, False, False, False)
+num_epoch, train_loss, train_acc, valid loss, valid_test
+models/3.pt
+(True, False, False, False, False, False, False, False)
+num_epoch, train_loss, train_acc, valid loss, valid_test
+models/3.pt
+(True, False, False, False, False, False, False, False)
+num_epoch, train_loss, train_acc, valid loss, valid_test
+models/9.pt
+(True, False, False, False, False, False, False, False)
+num_epoch, train_loss, train_acc, valid loss, valid_test
+models/8.pt
+(True, False, False, False, False, False, False, False)
+num_epoch, train_loss, train_acc, valid loss, valid_test
+models/1.pt
+(True, False, False, False, False, False, False, False)
+num_epoch, train_loss, train_acc, valid loss, valid_test
+models/1.pt
+(True, False, False, False, False, False, False, False)
+num_epoch, train_loss, train_acc, valid loss, valid_test
+num_epoch, train_loss, train_acc, valid loss, valid_test
+models/1.pt
+(True, False, False, False, False, False, False, False)
+num_epoch, train_loss, train_acc, valid loss, valid_test
+num_epoch, train_loss, train_acc, valid loss, valid_test
+num_epoch, train_loss, train_acc, valid loss, valid_test
+num_epoch, train_loss, train_acc, valid loss, valid_test
+num_epoch, train_loss, train_acc, valid loss, valid_test
+num_epoch, train_loss, train_acc, valid loss, valid_test
+num_epoch, train_loss, train_acc, valid loss, valid_test
+num_epoch, train_loss, train_acc, valid loss, valid_test
+num_epoch, train_loss, train_acc, valid loss, valid_test
+num_epoch, train_loss, train_acc, valid loss, valid_test
+models/1.pt
+(True, False, False, False, False, False, False, False)
+num_epoch, train_loss, train_acc, valid loss, valid_test
+models/1.pt
+(True, False, False, False, False, False, False, False)
+num_epoch, train_loss, train_acc, valid loss, valid_test
+models/1.pt
+(True, False, False, False, False, False, False, False)
+num_epoch, train_loss, train_acc, valid loss, valid_test
+models/1.pt
+(True, False, False, False, False, False, False, False)
+num_epoch, train_loss, train_acc, valid loss, valid_test
+models/0.pt
+(True, False, False, False, False, False, False, False)
+num_epoch, train_loss, train_acc, valid loss, valid_test
+models/0.pt
+(True, False, False, False, False, False, False, False)
