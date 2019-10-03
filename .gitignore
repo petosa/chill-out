@@ -4,5 +4,5 @@ __pycache__/
 .vscode/
 *.pt
 data/
-models/
-logs/
+models/*.pt
+logs/*.txt
