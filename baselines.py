@@ -5,18 +5,23 @@ from policies.chain_thaw import get_chain_thaw_policy
 import torch
 import alexnet
 
-# policy = get_gradual_unfreezing_policy()
+#policy = get_gradual_unfreezing_policy()
 # policy = get_chain_thaw_policy()
 policy = [[True]*8]
 model = alexnet.alexnet(pretrained=True)
-starting_model_name = 'models/' + str(time.time()) + '.pt'
-log_file_name = 'logs/' + str(time.time()) + '.txt'
-torch.save(model.state_dict(), starting_model_name)
-evaluator = PolicyEvaluator(model_class=alexnet.AlexNet, verbose=True, epochs=50, log_file=log_file_name)
+modelid = 0
+starting_model_name = 'models/' + str(modelid) + '.pt'
+log_file_name = 'logs/' + str(modelid) + '.txt'
+print ("Log File: {}".format(log_file_name))
+evaluator = PolicyEvaluator(model_class=alexnet.AlexNet, verbose=True, epochs=80, log_file=log_file_name)
+torch.save(model.state_dict(), evaluator.save_dir + starting_model_name)
 
 child_filename = starting_model_name
 for step in policy:
-    child_filename, accuracy = evaluator.train(child_filename, step)
+    dest_filename = 'models/' + str(modelid+1) + '.pt'
+    loss = evaluator.train(child_filename, dest_filename, step)
+    modelid += 1
+    child_filename = 'models/' + str(modelid) + '.pt'
     #Store filename, policystep + state, accuracy
 
 
