@@ -16,8 +16,9 @@ class PolicyEvaluator:
     def __init__(self, model_class=alexnet.AlexNet, lr=1e-4, momentum=.9, weight_decay=0, batch_size=256,
                     epochs=10, epochs_between_states=10, 
                     val_percentage=.2, no_cuda=False, seed=1, 
-                    log_interval=10, cifar10_dir="data", verbose=False):
+                    log_interval=10, cifar10_dir="data", log_file="log.txt", verbose=False):
 
+        self.log_file = log_file
         self.model_class = model_class
         self.verbose = verbose
         self.lr = lr
@@ -35,6 +36,9 @@ class PolicyEvaluator:
         self.log_interval = log_interval
         self.cifar10_dir = cifar10_dir
         self.load_cifar()
+
+        with open(self.log_file, "a+") as fh:
+            fh.write('num_epoch, train_loss, train_acc, valid loss, valid_test\n')
     
     def load_cifar(self):
         #Load data
@@ -74,24 +78,29 @@ class PolicyEvaluator:
         self.classes = ('plane', 'car', 'bird', 'cat',
                 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
         self.n_classes = 10
+        self.criterion = F.cross_entropy
 
 
     def train(self, model_path, policy_step):
+        with open(self.log_file, "a+") as fh:
+            fh.write(model_path + '\n')
+            fh.write(str(policy_step) + '\n')
 
         model = self.model_class(num_classes=self.n_classes)
         state_dict = torch.load(model_path)
         model.load_state_dict(state_dict)
+
         if self.verbose:
             print ('Model reloaded from: {}'.format(model_path))
-        self.criterion = F.cross_entropy
+            print(model)
+            print ("Current Policy : " + str(policy_step))
         if self.cuda:
             model.cuda()
         optimizer = optim.SGD(model.parameters(), lr=self.lr, momentum=self.momentum, weight_decay=self.weight_decay)
-        print(model)
+
         # model.named_parameters = [layer1.weight, layer1.bias, layer2.weight....]
         for i, (layer, w) in enumerate(model.named_parameters()):
             w.requires_grad = policy_step[i // 2] # weight and bias are in named_parameters, not in policy
-        print ("Current Policy : " + str(policy_step))
         for i in range(self.epochs):
             model.train()
             for batch_idx, batch in enumerate(self.train_loader):
@@ -103,20 +112,26 @@ class PolicyEvaluator:
                 loss = self.criterion(output, targets)
                 loss.backward()
                 optimizer.step()
-            #print ("Epoch : " + str(i))
+
+            train_loss, train_acc = self.evaluate(model, 'train')
             val_loss, val_acc = self.evaluate(model, 'val')
+            with open(self.log_file, "a+") as fh:
+                fh.write('{},{:.6f},{},{:.6f},{}\n'.format(i+1, train_loss, train_acc, val_loss, val_acc))
             if self.verbose:
                 print('Train Epoch: {} \t'
                   'Train Loss: {:.6f}\tVal Loss: {:.6f}\tVal Acc: {}'.format(
-                i + 1, loss.data, val_loss, val_acc))
+                i + 1, train_loss, val_loss, val_acc))
         test_loss, test_acc = self.evaluate(model, 'test', verbose=True)
 
         child_filename = 'models/' + str(time.time()) + '.pt'
         torch.save(model.state_dict(), child_filename)
         if self.verbose:
             print ('New model saved at: {}'.format(child_filename))
+        with open(self.log_file, "a+") as fh:
+            fh.write('Model saved at {}\n'.format(child_filename))
+            fh.write('Test Loss: {:.6f}, Test Acc: {}\n'.format(test_loss, test_acc))
 
-        return child_filename, test_acc
+        return child_filename, test_loss
 
 
     def evaluate(self, model, split, verbose=False, n_batches=None):
@@ -128,6 +143,8 @@ class PolicyEvaluator:
             loader = self.val_loader
         elif split == 'test':
             loader = self.test_loader
+        elif split == 'train':
+            loader = self.train_loader
         for batch_i, batch in enumerate(loader):
             data, target = batch
             if self.cuda:
