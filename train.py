@@ -33,6 +33,7 @@ class PolicyEvaluator:
                     epochs=1, epochs_between_states=10, 
                     val_percentage=.2, no_cuda=False, seed=0, 
                     log_interval=10, cifar10_dir="data", log_file="log.txt", verbose=False):
+        
         self.save_dir = str(time.time()) + '/'
         os.mkdir(self.save_dir)
         os.mkdir(self.save_dir + 'logs/')
@@ -120,8 +121,18 @@ class PolicyEvaluator:
         #optimizer = optim.SGD(model.parameters(), lr=self.lr, momentum=self.momentum, weight_decay=self.weight_decay)
 
         # model.named_parameters = [layer1.weight, layer1.bias, layer2.weight....]
-        for i, (layer, w) in enumerate(model.named_parameters()):
-            w.requires_grad = policy_step[i // 2] # weight and bias are in named_parameters, not in policy
+        #for i, (layer, w) in enumerate(model.named_parameters()):
+        #    w.requires_grad = policy_step[i // 2] # weight and bias are in named_parameters, not in policy
+        idx = 0
+        for i, (_, w) in enumerate(model.named_children()):
+            for _, (_, w1) in enumerate(w.named_children()):
+                count = False
+                for _, (_, w2) in enumerate(w1.named_parameters()):
+                    w2.requires_grad = policy_step[idx//2]
+                    count = True
+                if count:
+                    idx += 1
+
         for i in range(self.epochs):
             model.train()
             for batch_idx, batch in enumerate(self.train_loader):
