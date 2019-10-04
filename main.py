@@ -7,11 +7,11 @@ from env.intspace import IntSpace
 from env.knapsack import Knapsack
 
 env = IntSpace()   
-search = GreedyBestFirst(env, visited_set=True)
+search = Beam(env, visited_set=False)
 
 s, v = None, None
 iters = 0
-for i in range(35):
+for i in range(50):
     if i % 10000 == 0:
         print("Step", i)
     iters += 1

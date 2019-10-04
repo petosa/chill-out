@@ -22,11 +22,9 @@ class Beam(Search):
             pq.heappush(self.frontier, (value, state))
             return state, value
 
-        # If buffer is empty attempt to fill it by popping parent from frontier.
+        # If buffer is empty attempt to fill it by popping beam_size parents from frontier.
         elif len(self.frontier) > 0:
-            self.frontier = self.frontier[:self.beam_size]
-            print("beam", self.frontier)
-            for _ in self.frontier:
+            for _ in range(min(len(self.frontier), self.beam_size)):
                 state = pq.heappop(self.frontier)[1]
                 neighbors = self.env.get_children(state)
                 if self.visited_set:
@@ -34,6 +32,7 @@ class Beam(Search):
                     self.visited.update(set(neighbors))
                 self.buffer += neighbors
                 [self.hook(n, state) for n in neighbors]
+            self.frontier = []
             return self.next()
 
 
