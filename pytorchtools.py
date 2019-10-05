@@ -6,12 +6,12 @@ class EarlyStopping:
         self.patience = patience
         self.verbose = verbose
         self.counter = 0
-        self.best_val_loss = None
+        self.best_val_loss = np.inf
         self.early_stop = False
         self.delta = delta
 
     def update(self, val_loss, model, optimizer):
-        if self.best_val_loss is None or self.best_val_loss > val_loss:
+        if self.best_val_loss == np.inf or self.best_val_loss > val_loss:
             self.save_checkpoint(val_loss, model, optimizer)
             self.best_val_loss = val_loss
             self.counter = 0
