@@ -13,6 +13,8 @@ import os
 from torch.utils.data.sampler import SubsetRandomSampler
 from policies.gradual_unfreezing import get_gradual_unfreezing_policy
 from policies.chain_thaw import get_chain_thaw_policy
+from pytorchtools import EarlyStopping
+
 
 def seed_torch(seed=0):
     random.seed(seed)
@@ -102,7 +104,7 @@ class PolicyEvaluator:
         self.criterion = F.cross_entropy
 
 
-    def train(self, model_path, destination_model_path, policy_step):
+    def train(self, model_path, destination_model_path, policy_step, patience=5):
         with open(self.save_dir + self.log_file, "a+") as fh:
             fh.write(model_path + '\n')
             fh.write(str(policy_step) + '\n')
@@ -132,6 +134,7 @@ class PolicyEvaluator:
                     count = True
                 if count:
                     idx += 1
+        early_stopping = EarlyStopping(patience=patience, verbose=True)
 
         for i in range(self.epochs):
             model.train()
@@ -153,6 +156,14 @@ class PolicyEvaluator:
                 print('Train Epoch: {} \t'
                   'Train Loss: {:.6f}\tVal Loss: {:.6f}\tVal Acc: {}'.format(
                 i + 1, train_loss, val_loss, val_acc))
+            
+            # early_stopping needs the validation loss to check if it has decresed, 
+            # and if it has, it will make a checkpoint of the current model
+            early_stopping(val_loss, model)
+            
+            if early_stopping.early_stop:
+                print("Early stopping")
+                break
         val_loss, val_acc = self.evaluate(model, 'val')
         #test_loss, test_acc = self.evaluate(model, 'test', verbose=True)
 
