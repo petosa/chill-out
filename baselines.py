@@ -10,8 +10,8 @@ import util
 model = alexnet.alexnet(pretrained=True)
 #model = squeezenet.squeezenet1_1(pretrained=True)
 num_trainable = util.get_trainable_layer_count(model)
-policy = [[True]*num_trainable]
-#policy = get_gradual_unfreezing_policy()
+#policy = [[True]*num_trainable]
+policy = get_gradual_unfreezing_policy()
 # policy = get_chain_thaw_policy()
 
 modelid = 0

@@ -159,13 +159,22 @@ class PolicyEvaluator:
             
             # early_stopping needs the validation loss to check if it has decresed, 
             # and if it has, it will make a checkpoint of the current model
-            early_stopping(val_loss, model)
+            early_stopping.update(val_loss, model, optimizer)
             
             if early_stopping.early_stop:
                 print("Early stopping, epoch:", i)
                 break
-        val_loss, val_acc = self.evaluate(model, 'val')
+        #val_loss, val_acc = self.evaluate(model, 'val')
         #test_loss, test_acc = self.evaluate(model, 'test', verbose=True)
+        
+        #backtrack to earlier stopped state
+        model = self.model_class(num_classes=self.n_classes)
+        state_dict = torch.load('checkpoint.pt')
+        model.load_state_dict(state_dict)
+
+        optimizer = optim.Adam(model.parameters())
+        optim_state_dict = torch.load('optimizer.pt')
+        optimizer.load_state_dict(optim_state_dict)
 
         torch.save(optimizer.state_dict(), self.save_dir + destination_model_path.split('/')[0] + '/optim' + destination_model_path.split('/')[1])
         torch.save(model.state_dict(), self.save_dir + destination_model_path)
