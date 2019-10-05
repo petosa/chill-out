@@ -120,6 +120,9 @@ class PolicyEvaluator:
         if self.cuda:
             model.cuda()
         optimizer = optim.Adam(model.parameters())
+        opt_state_dict = torch.load(self.save_dir + model_path.split('/')[0] + '/optim' + model_path.split('/')[1])
+        optimizer.load_state_dict(opt_state_dict)
+
         #optimizer = optim.SGD(model.parameters(), lr=self.lr, momentum=self.momentum, weight_decay=self.weight_decay)
 
         # model.named_parameters = [layer1.weight, layer1.bias, layer2.weight....]
