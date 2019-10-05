@@ -176,7 +176,7 @@ class PolicyEvaluator:
             fh.write('Model saved at {}\n'.format(self.save_dir + destination_model_path))
             fh.write('Final Valid Loss: {:.6f}, Final Valid Acc: {}\n'.format(val_loss, val_acc))
 
-        return val_acc
+        return val_loss
 
 
     def evaluate(self, model, split, verbose=False, n_batches=None):
