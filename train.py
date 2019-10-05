@@ -123,17 +123,19 @@ class PolicyEvaluator:
         #optimizer = optim.SGD(model.parameters(), lr=self.lr, momentum=self.momentum, weight_decay=self.weight_decay)
 
         # model.named_parameters = [layer1.weight, layer1.bias, layer2.weight....]
-        #for i, (layer, w) in enumerate(model.named_parameters()):
-        #    w.requires_grad = policy_step[i // 2] # weight and bias are in named_parameters, not in policy
+        # for i, (layer, w) in enumerate(model.named_parameters()):
+        #     print(layer)
+        #     w.requires_grad = policy_step[i // 2] # weight and bias are in named_parameters, not in policy
         idx = 0
-        for i, (_, w) in enumerate(model.named_children()):
-            for _, (_, w1) in enumerate(w.named_children()):
+        for i, (l1, w) in enumerate(model.named_children()):
+            for _, (l2, w1) in enumerate(w.named_children()):
                 count = False
-                for _, (_, w2) in enumerate(w1.named_parameters()):
-                    w2.requires_grad = policy_step[idx//2]
+                for _, (l3, w2) in enumerate(w1.named_parameters()):
+                    w2.requires_grad = policy_step[idx]
                     count = True
                 if count:
                     idx += 1
+        
         early_stopping = EarlyStopping(patience=patience, verbose=True)
 
         for i in range(self.epochs):

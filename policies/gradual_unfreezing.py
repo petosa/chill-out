@@ -1,4 +1,4 @@
-def get_gradual_unfreezing_policy():
+def get_gradual_unfreezing_policy(n_layers=8):
     # policy = [
     #     [False]*7 + [True],
     #     [False]*6 + [True]*2,
@@ -9,4 +9,4 @@ def get_gradual_unfreezing_policy():
     #     [False]*1 + [True]*7,
     #     [True]*8,
     # ]
-    return [[False]*(8-i) + [True]*i for i in range(1,9)]
+    return [[False]*(n_layers-i) + [True]*i for i in range(1,n_layers+1)]
