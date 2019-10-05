@@ -104,7 +104,7 @@ class PolicyEvaluator:
         self.criterion = F.cross_entropy
 
 
-    def train(self, model_path, destination_model_path, policy_step, patience=5):
+    def train(self, model_path, destination_model_path, policy_step, patience=2):
         with open(self.save_dir + self.log_file, "a+") as fh:
             fh.write(model_path + '\n')
             fh.write(str(policy_step) + '\n')
@@ -162,7 +162,7 @@ class PolicyEvaluator:
             early_stopping(val_loss, model)
             
             if early_stopping.early_stop:
-                print("Early stopping")
+                print("Early stopping, epoch:", i)
                 break
         val_loss, val_acc = self.evaluate(model, 'val')
         #test_loss, test_acc = self.evaluate(model, 'test', verbose=True)
