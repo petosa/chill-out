@@ -1,12 +1,12 @@
 import unittest
 from env.intspace import IntSpace
-from search.greedybestfirst import GreedyBestFirst
+from search.bestfirst import BestFirst
 import heapq as pq
 
-class GreedyBestFirstTest(unittest.TestCase):
+class BestFirstTest(unittest.TestCase):
 
     def test_unvisit_intspace(self):
-        s = GreedyBestFirst(IntSpace(), visited_set=False)
+        s = BestFirst(IntSpace(), visited_set=False)
         path = []
         for _ in range(17):
             path.append(s.next()[0])
@@ -15,7 +15,7 @@ class GreedyBestFirstTest(unittest.TestCase):
         self.assertListEqual(frontier, [-17,-7,-7,-20,-20,-3,-3,-24,0,0,-27,7,10])
 
     def test_visit_intspace(self):
-        s = GreedyBestFirst(IntSpace(), visited_set=True)
+        s = BestFirst(IntSpace(), visited_set=True)
         path = []
         for _ in range(16):
             path.append(s.next()[0])

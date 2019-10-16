@@ -1,6 +1,9 @@
 from search.search import Search
 import heapq as pq
 
+
+# TODO
+# More tests
 class Beam(Search):
 
     def __init__(self, env, beam_size=3, visited_set=True):

@@ -1,8 +1,10 @@
 from search.search import Search
 import heapq as pq
 
-
-class GreedyBestFirst(Search):
+# TODO
+# Fix implementation to make it simpler
+# Write tests
+class Greedy(Search):
 
     def __init__(self, env, visited_set=True):
         super().__init__(env)
@@ -10,6 +12,7 @@ class GreedyBestFirst(Search):
         self.buffer = [env.initial_state]
         self.visited_set = visited_set
         self.visited = set([env.initial_state])
+        self.evaluating = False
 
     def next(self):
 
@@ -21,17 +24,18 @@ class GreedyBestFirst(Search):
             pq.heappush(self.frontier, (value, state))
             return state, value
 
-        # If buffer is empty attempt to fill it by popping parent from frontier.
+        # If buffer is empty attempt to fill it by popping 1 parent from frontier.
         elif len(self.frontier) > 0:
             state = pq.heappop(self.frontier)[1]
             neighbors = self.env.get_children(state)
             if self.visited_set:
                 neighbors = [n for n in neighbors if n not in self.visited]
                 self.visited.update(set(neighbors))
-            self.buffer = neighbors
+            self.buffer += neighbors
             [self.hook(n, state) for n in neighbors]
+            self.frontier = []
             return self.next()
-            
+
 
 
 

@@ -1,7 +1,8 @@
 from .search import Search
 from collections import deque
 
-
+# TODO
+# Write tests
 class BFS(Search):
 
     def __init__(self, env, visited_set=True):
