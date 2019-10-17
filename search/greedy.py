@@ -1,18 +1,14 @@
 from search.search import Search
-import heapq as pq
 
-# TODO
-# Fix implementation to make it simpler
-# Write tests
+
+# TODO More tests
 class Greedy(Search):
 
-    def __init__(self, env, visited_set=True):
+    def __init__(self, env):
         super().__init__(env)
-        self.frontier = []
+        self.best = None
         self.buffer = [env.initial_state]
-        self.visited_set = visited_set
         self.visited = set([env.initial_state])
-        self.evaluating = False
 
     def next(self):
 
@@ -21,19 +17,18 @@ class Greedy(Search):
             state = self.buffer[0]
             del self.buffer[0]
             value = self.env.evaluate(state)
-            pq.heappush(self.frontier, (value, state))
+            self.best = (value, state) if self.best is None else min((value, state), self.best)
             return state, value
 
-        # If buffer is empty attempt to fill it by popping 1 parent from frontier.
-        elif len(self.frontier) > 0:
-            state = pq.heappop(self.frontier)[1]
+        # Selected node is the best of nodes we just evaluated.
+        elif self.best is not None:
+            state = self.best[1]
             neighbors = self.env.get_children(state)
-            if self.visited_set:
-                neighbors = [n for n in neighbors if n not in self.visited]
-                self.visited.update(set(neighbors))
+            neighbors = [n for n in neighbors if n not in self.visited]
+            self.visited.update(set(neighbors))
             self.buffer += neighbors
             [self.hook(n, state) for n in neighbors]
-            self.frontier = []
+            self.best = None
             return self.next()
 
 

@@ -1,19 +1,17 @@
 import unittest
 from env.intspace import IntSpace
-from search.bestfirst import BestFirst
-import heapq as pq
+from search.bfs import BFS
 
 
-class BestFirstTest(unittest.TestCase):
+class BFSTest(unittest.TestCase):
 
     def test_visit_intspace(self):
-        s = BestFirst(IntSpace())
+        s = BFS(IntSpace())
         path = []
         for _ in range(16):
             path.append(s.next()[0])
-        self.assertListEqual(path, [0,-10,-7,7,10,-20,-17,-3,-27,-24,-14,3,-21,-4,-30,-13])
-        frontier = [pq.heappop(s.frontier)[1] for _ in range(len(s.frontier))]
-        self.assertListEqual(frontier, [-13,-4,-21,-3,-24,-27,3,-30,7,10])
+        self.assertListEqual(path, [0,-10,-7,7,10,-20,-17,-3,-14,3,14,17,20,-30,-27,-13])
+        self.assertListEqual(list(s.frontier), [-24, 4, -21, -4, 13, 21, 24, 27, 30, -40, -37, -23, -34, -6])
         self.assertListEqual(s.trace(-10), [0, -10])
         self.assertListEqual(s.trace(-3), [0, -10, -3])
         self.assertListEqual(s.trace(-24), [0, -10, -17, -24])
