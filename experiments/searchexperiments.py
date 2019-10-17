@@ -18,7 +18,7 @@ log = defaultdict(list)
 
 for s in searches:
     #e = Knapsack(items=25, weight_limit=25)
-    e = Maze(60, 60, 1)
+    e = Maze(100, 100, 1)
     all_visited = []
     se = s(e)
     current_best = None
@@ -29,9 +29,9 @@ for s in searches:
         current_best = val if current_best is None else min(current_best,val)
         all_visited.append(state)
         log[s].append(-current_best)
-    e.visualize(all_visited)
+    e.visualize(all_visited, title=se.__class__.__name__)
 
-
+searches = sorted(searches, key=lambda s: -len(log[s]))
 for s in searches:
     l = plt.plot(log[s], linewidth=5, label=str(s.__name__) + ": " + str(round(log[s][-1], 1)), alpha=0.9)
 plt.title("Search algorithm comparison on knapsack environment", fontsize=15)
