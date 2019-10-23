@@ -1,6 +1,4 @@
 from .search import Search
-from collections import deque
-from random import Random
 
 
 # Note: Does not memoize previously visited states. The reason is we have no way of telling once all states are expanded.
@@ -8,9 +6,8 @@ from random import Random
 # TODO More tests
 class RandomRollout(Search):
 
-    def __init__(self, env, max_depth=None, seed=0):
-        self.R = Random(seed)
-        super().__init__(env)
+    def __init__(self, env, seed=0, max_depth=None):
+        super().__init__(env, None, seed)
         self.max_depth = max_depth
         self.state = (self.env.initial_state, 0)
         self.visited = set([env.initial_state])

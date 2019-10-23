@@ -56,7 +56,7 @@ class Maze(Environment):
         for m in inner(height, width): pass
         return m
 
-    def visualize(self, explored=[], title="Maze"):
+    def visualize(self, explored=[], title="Maze", delay=0):
         cp = np.stack([(-self.maze.copy()+1).tolist()]*3, axis=-1)
         fig, ax = plt.subplots()
         img = ax.imshow(cp, interpolation='nearest')
@@ -74,5 +74,5 @@ class Maze(Environment):
             self.last_frame = i
             return img,
 
-        ani = animation.FuncAnimation(fig, animate, interval=0, blit=True, save_count=0, frames=len(explored), repeat=False)
+        ani = animation.FuncAnimation(fig, animate, interval=delay, blit=True, save_count=0, frames=len(explored), repeat=False)
         plt.show()

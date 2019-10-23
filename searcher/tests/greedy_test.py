@@ -4,7 +4,7 @@ from search.greedy import Greedy
 import heapq as pq
 
 
-class GreedyTest(unittest.TestCase):
+class RandomRolloutTest(unittest.TestCase):
 
     def test_visit_intspace(self):
         s = Greedy(IntSpace())

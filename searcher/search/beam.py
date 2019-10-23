@@ -1,15 +1,15 @@
-from search.search import Search
+from .search import Search
 import heapq as pq
 
 
 # TODO More tests
 class Beam(Search):
 
-    def __init__(self, env, beam_size=3):
-        super().__init__(env)
+    def __init__(self, env, beam_size=3, sample=None, seed=0):
+        super().__init__(env, sample, seed)
+        self.beam_size = beam_size
         self.frontier = []
         self.buffer = [env.initial_state]
-        self.beam_size = beam_size
         self.visited = set([env.initial_state])
 
     def next(self):
@@ -28,6 +28,7 @@ class Beam(Search):
                 state = pq.heappop(self.frontier)[1]
                 neighbors = self.env.get_children(state)
                 neighbors = [n for n in neighbors if n not in self.visited]
+                neighbors = self.sample_list(neighbors)
                 self.visited.update(set(neighbors))
                 self.buffer += neighbors
                 [self.hook(n, state) for n in neighbors]
