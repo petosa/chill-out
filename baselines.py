@@ -1,24 +1,24 @@
 import time
-from train import PolicyEvaluator
+#from train import PolicyEvaluator
 from policies.gradual_unfreezing import get_gradual_unfreezing_policy
 from policies.chain_thaw import get_chain_thaw_policy
 import torch
 import torch.optim as optim
-import alexnet
 import squeezenet
 import util
 
-model = alexnet.alexnet(pretrained=True)
-# model = squeezenet.squeezenet1_1(pretrained=True)
-num_trainable = util.get_trainable_layer_count(model)
-#policy = [[True]*num_trainable]
-policy = get_gradual_unfreezing_policy(n_layers=num_trainable)
+model  = util.load_squeezenet(10)
+trainable_layers = util.get_trainable_layers(model)
+policy = get_gradual_unfreezing_policy(n_layers=len(trainable_layers))
 # policy = get_chain_thaw_policy()
+print(len(trainable_layers))
 
 modelid = 0
 starting_model_name = 'models/' + str(modelid) + '.pt'
 log_file_name = 'logs/' + str(modelid) + '.txt'
 print ("Log File: {}".format(log_file_name))
+
+quit()
 evaluator = PolicyEvaluator(batch_size=256, model_class=type(model), verbose=True, epochs=80, log_file=log_file_name)
 torch.save(model.state_dict(), evaluator.save_dir + starting_model_name)
 optimizer = optim.Adam(model.parameters())
