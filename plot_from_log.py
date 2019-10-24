@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 
 regex = r'[0-9]+\,[0-9]*\.?[0-9]+\,[0-9]+\,[0-9]*\.?[0-9]+\,[0-9]+'
 loss_line = re.compile(regex)
-
-files = ['gradual_unfreezing.log', 'chain_thaw.log', 'unfreeze_all.log']
+#files = ['small_unfrozen.log', 'small_chain_thaw.log', 'small_gradual_unfreezing.log']
+files = [ 'small_gradual_unfreezing.log', "small_unfrozen.log"]
 
 fig = plt.figure()
 
@@ -19,7 +19,8 @@ for i, filename in enumerate(files):
     with open('logs/' + filename, 'r') as f:
         for line in f:
             if loss_line.match(line):
-                _, train_loss, train_acc, valid_loss, valid_acc = line.strip().split(',')
+                line = line[:-1]
+                _, train_loss, train_acc, valid_loss, valid_acc = [float(x) for x in line.strip().split(',')]
                 train_losses.append(train_loss)
                 train_accs.append(train_acc)
                 val_losses.append(valid_loss)

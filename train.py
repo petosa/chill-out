@@ -1,16 +1,18 @@
-import time
-import alexnet
-import torch
-import random
+
 from torch import nn
 from torch.autograd import Variable
+from torch.utils.data.sampler import SubsetRandomSampler
+from torch_lr_finder import LRFinder
+
+import torchvision
+import os
+import util
+import torch
+import random
+import numpy as np
 import torch.nn.functional as F
 import torch.optim as optim
-import torchvision
-import numpy as np
-import argparse
-import os
-from torch.utils.data.sampler import SubsetRandomSampler
+
 from policies.gradual_unfreezing import get_gradual_unfreezing_policy
 from policies.chain_thaw import get_chain_thaw_policy
 from pytorchtools import EarlyStopping
@@ -26,125 +28,92 @@ def seed_torch(seed=0):
     torch.backends.cudnn.benchmark = False
     torch.backends.cudnn.deterministic = True
 
-seed_torch()
-def _init_fn():
-    np.random.seed(0)
 
-class PolicyEvaluator:
-    def __init__(self, model_class=alexnet.AlexNet, lr=1e-4, momentum=.9, weight_decay=0, batch_size=256,
-                    epochs=1, epochs_between_states=10, 
-                    val_percentage=.2, no_cuda=False, seed=0, 
-                    log_interval=10, cifar10_dir="data", log_file="log.txt", verbose=False):
-        
-        self.save_dir = str(time.time()) + '/'
-        os.mkdir(self.save_dir)
-        os.mkdir(self.save_dir + 'logs/')
-        os.mkdir(self.save_dir + 'models/')
-        self.log_file = log_file
-        self.model_class = model_class
+class Trainer:
+
+    def __init__(self, session, data_loader, batch_size=256, val_percentage=.2, data_folder="data", no_cuda=False, seed=0, verbose=False):
+        os.mkdir(str(session))
+        self.session = str(session)
         self.verbose = verbose
-        self.lr = lr
-        self.momentum = momentum
-        self.weight_decay = weight_decay
         self.batch_size = batch_size
-        self.epochs = epochs
-        self.epochs_between_states = epochs_between_states
         self.val_percentage = val_percentage
+        self.data_folder = data_folder
         self.cuda = not no_cuda and torch.cuda.is_available()
         self.seed = seed
-
-        # make deterministic
+        self.log_file = str(session) + "/log.txt"
         seed_torch(seed=self.seed)
-        
-        self.log_interval = log_interval
-        self.cifar10_dir = cifar10_dir
+        self.log_line("num_epoch, train_loss, train_acc, valid loss, valid_test")
+        #data_loader()
         self.load_cifar()
 
-        with open(self.save_dir + self.log_file, "a+") as fh:
-            fh.write('num_epoch, train_loss, train_acc, valid loss, valid_test\n')
-    
     def load_cifar(self):
-        #Load data
-        transform = torchvision.transforms.Compose(
-            [torchvision.transforms.Resize((224, 224)),
+        transform = torchvision.transforms.Compose([
+            torchvision.transforms.Resize((224, 224)),
             torchvision.transforms.ToTensor(),
             torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-            ])
-
-        trainset = torchvision.datasets.CIFAR10(self.cifar10_dir, train=True,
-                                                download=True, transform=transform)
+        ])
+        datapath = os.path.join(self.data_folder, "cifar10")
+        trainset = torchvision.datasets.CIFAR10(datapath, train=True, download=True, transform=transform)
         idx = list(range(len(trainset)))
         np.random.shuffle(idx)
+        idx = idx[:5000]
         val_percentage = self.val_percentage
-        split_idx = int(val_percentage*len(trainset))
+        split_idx = int(val_percentage*len(idx))
         val_idx = idx[-split_idx:]
         train_idx = idx[:-split_idx]
         train_sampler = SubsetRandomSampler(train_idx)
         val_sampler = SubsetRandomSampler(val_idx)
         self.train_loader = torch.utils.data.DataLoader(
             trainset, batch_size=self.batch_size, sampler=train_sampler,
-            num_workers=0, pin_memory=True, worker_init_fn=_init_fn,
+            num_workers=4, pin_memory=True
         )
         self.val_loader = torch.utils.data.DataLoader(
             trainset, batch_size=self.batch_size, sampler=val_sampler,
-            num_workers=0, pin_memory=True, worker_init_fn=_init_fn,
+            num_workers=4, pin_memory=True
         )
-
-        testset = torchvision.datasets.CIFAR10(self.cifar10_dir, train=False,
-                                            download=True, transform=transform)
-
+        testset = torchvision.datasets.CIFAR10(datapath, train=False, download=True, transform=transform)
         self.test_loader = torch.utils.data.DataLoader(
             testset, batch_size=self.batch_size, shuffle=True,
-            num_workers=0, pin_memory=True, worker_init_fn=_init_fn,
+            num_workers=4, pin_memory=True
         )
-
         self.classes = ('plane', 'car', 'bird', 'cat',
                 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
         self.n_classes = 10
         self.criterion = F.cross_entropy
 
 
-    def train(self, model_path, destination_model_path, policy_step, patience=2):
-        with open(self.save_dir + self.log_file, "a+") as fh:
-            fh.write(model_path + '\n')
-            fh.write(str(policy_step) + '\n')
+    def train(self, model, optimizer, source, destination, policy_step, patience=2):
 
-        model = self.model_class(num_classes=self.n_classes)
-        state_dict = torch.load(self.save_dir + model_path)
-        model.load_state_dict(state_dict)
+        self.log_line("Model {}, policy step {}.".format(source, policy_step))
+        util.full_load(model, optimizer, source, self.session)
 
         if self.verbose:
-            print ('Model reloaded from: {}'.format(self.save_dir + model_path))
-            print(model)
-            print ("Current Policy : " + str(policy_step))
+            print ("Model reloaded from: {}".format(os.path.join(self.session, str(source) + ".pt")))
+            print ("Current Policy: " + str(policy_step))
         if self.cuda:
             model.cuda()
-        optimizer = optim.Adam(model.parameters())
-        opt_state_dict = torch.load(self.save_dir + model_path.split('/')[0] + '/optim' + model_path.split('/')[1])
-        optimizer.load_state_dict(opt_state_dict)
 
-        #optimizer = optim.SGD(model.parameters(), lr=self.lr, momentum=self.momentum, weight_decay=self.weight_decay)
-
-        # model.named_parameters = [layer1.weight, layer1.bias, layer2.weight....]
-        # for i, (layer, w) in enumerate(model.named_parameters()):
-        #     print(layer)
-        #     w.requires_grad = policy_step[i // 2] # weight and bias are in named_parameters, not in policy
-        idx = 0
-        for i, (l1, w) in enumerate(model.named_children()):
-            for _, (l2, w1) in enumerate(w.named_children()):
-                count = False
-                for _, (l3, w2) in enumerate(w1.named_parameters()):
-                    w2.requires_grad = policy_step[idx]
-                    count = True
-                if count:
-                    idx += 1
+        for i, l in enumerate(util.get_trainable_layers(model)):
+            for _, p in l.named_parameters():
+                p.requires_grad = policy_step[i]
         
         early_stopping = EarlyStopping(patience=patience, verbose=True)
 
-        for i in range(self.epochs):
+        #import torch
+        #optimizer = torch.optim.SGD(model.parameters(), 1e-7, momentum=0.9, nesterov=True, weight_decay=1e-4)
+        #lr_finder = LRFinder(model, optimizer, self.criterion, device="cuda")
+        #lr_finder.range_test(self.train_loader, end_lr=1e-1, num_iter=30)
+        #hist = np.array(lr_finder.history["loss"])
+        #lrs = np.array(lr_finder.history["lr"])
+        #ind = np.argmax(hist[:-1]-hist[1:]) + 1
+        #print("Found best learning rate: ", lrs[ind])
+        #optimizer = torch.optim.SGD(model.parameters(), lrs[ind], momentum=0.9, nesterov=True, weight_decay=1e-4)
+
+        epoch = 1
+        while True:
+
             model.train()
-            for batch_idx, batch in enumerate(self.train_loader):
-                images, targets = Variable(batch[0]), Variable(batch[1])
+            for images, targets in self.train_loader:
                 if self.cuda:
                     images, targets = images.cuda(), targets.cuda()
                 model.zero_grad()
@@ -152,15 +121,12 @@ class PolicyEvaluator:
                 loss = self.criterion(output, targets)
                 loss.backward()
                 optimizer.step()
-
-            train_loss, train_acc = self.evaluate(model, 'train')
+            train_loss, train_acc = self.evaluate(model, 'train', n_batches=3)
             val_loss, val_acc = self.evaluate(model, 'val')
-            with open(self.save_dir + self.log_file, "a+") as fh:
-                fh.write('{},{:.6f},{},{:.6f},{}\n'.format(i+1, train_loss, train_acc, val_loss, val_acc))
+
+            self.log_line("{},{:.6f},{},{:.6f},{}".format(epoch, train_loss, train_acc, val_loss, val_acc))
             if self.verbose:
-                print('Train Epoch: {} \t'
-                  'Train Loss: {:.6f}\tVal Loss: {:.6f}\tVal Acc: {}'.format(
-                i + 1, train_loss, val_loss, val_acc))
+                print('Train Epoch: {} \tTrain Loss: {:.6f}\tVal Loss: {:.6f}\tVal Acc: {}'.format(epoch, train_loss, val_loss, val_acc))
             
             # early_stopping needs the validation loss to check if it has decresed, 
             # and if it has, it will make a checkpoint of the current model
@@ -169,108 +135,55 @@ class PolicyEvaluator:
             if early_stopping.early_stop:
                 print("Early stopping, epoch:", i)
                 break
-        #val_loss, val_acc = self.evaluate(model, 'val')
-        #test_loss, test_acc = self.evaluate(model, 'test', verbose=True)
+            
+            epoch += 1
         
-        #backtrack to earlier stopped state
-        model = self.model_class(num_classes=self.n_classes)
+
         state_dict = torch.load('checkpoint.pt')
         model.load_state_dict(state_dict)
 
-        optimizer = optim.Adam(model.parameters())
         optim_state_dict = torch.load('optimizer.pt')
         optimizer.load_state_dict(optim_state_dict)
 
-        torch.save(optimizer.state_dict(), self.save_dir + destination_model_path.split('/')[0] + '/optim' + destination_model_path.split('/')[1])
-        torch.save(model.state_dict(), self.save_dir + destination_model_path)
+        util.full_save(model, optimizer, destination, self.session)
+
         if self.verbose:
-            print ('New optimizer saved at: {}'.format(self.save_dir + destination_model_path.split('/')[0] + '/optim' + destination_model_path.split('/')[1]))
-            print ('New model saved at: {}'.format(self.save_dir + destination_model_path))
-        with open(self.save_dir + self.log_file, "a+") as fh:
-            fh.write('Model saved at {}\n'.format(self.save_dir + destination_model_path))
-            fh.write('Final Valid Loss: {:.6f}, Final Valid Acc: {}\n'.format(val_loss, val_acc))
+            print("Saved model: {}".format(os.path.join(self.session, str(destination) + ".pt")))
+
+        self.log_line("Model saved at {}".format(os.path.join(self.session, str(source) + ".pt")))
+        self.log_line("Final Valid Loss: {:.6f}, Final Valid Acc: {}".format(val_loss, val_acc))
 
         return val_loss
 
 
-    def evaluate(self, model, split, verbose=False, n_batches=None):
+    def evaluate(self, model, split, n_batches=None):
         model.eval()
         loss = 0
         correct = 0
         n_examples = 0
-        if split == 'val':
+        if split == "val":
             loader = self.val_loader
-        elif split == 'test':
+        elif split == "test":
             loader = self.test_loader
-        elif split == 'train':
+        elif split == "train":
             loader = self.train_loader
-        for batch_i, batch in enumerate(loader):
-            data, target = batch
+        for batch_i, (images, targets) in enumerate(loader):
             if self.cuda:
-                data, target = data.cuda(), target.cuda()
+                images, targets = images.cuda(), targets.cuda()
             with torch.no_grad():
-                data, target = Variable(data), Variable(target)
-            output = model(data)
-            loss += self.criterion(output, target, size_average=False).data
-            # predict the argmax of the log-probabilities
-            pred = output.data.max(1, keepdim=True)[1]
-            correct += pred.eq(target.data.view_as(pred)).cpu().sum()
-            n_examples += pred.size(0)
-            if n_batches and (batch_i >= n_batches):
-                break
-
+                output = model(images)
+                loss += self.criterion(output, targets, reduction="sum").data
+                pred = output.data.max(1, keepdim=True)[1]
+                correct += pred.eq(targets.data.view_as(pred)).cpu().sum()
+                n_examples += pred.size(0)
+                if n_batches and (batch_i >= n_batches):
+                    break
         loss /= n_examples
         acc = 100. * correct / n_examples
-        if verbose:
-            print('\n{} set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
-                split, loss, correct, n_examples, acc))
         return loss, acc
 
-
     
-
-
-
-
-'''
-parser = argparse.ArgumentParser(description='Chill-out')
-# Hyperparameters
-parser.add_argument('--lr', type=float, metavar='LR', default=1e-4,
-                    help='learning rate')
-parser.add_argument('--momentum', type=float, metavar='M', default=.9,
-                    help='SGD momentum')
-parser.add_argument('--weight-decay', type=float, default=0.0,
-                    help='Weight decay hyperparameter')
-parser.add_argument('--batch-size', type=int, metavar='N', default=256,
-                    help='input batch size for training')
-parser.add_argument('--epochs', type=int, metavar='N', default=10,
-                    help='number of epochs to train')
-parser.add_argument('--model',
-                    choices=['alexnet'],
-                    help='which model to train/evaluate')
-parser.add_argument('--hidden-dim', type=int,
-                    help='number of hidden features/activations')
-parser.add_argument('--kernel-size', type=int,
-                    help='size of convolution kernels/filters')
-parser.add_argument('--epochs-between-states', type=int, help='idfk')
-parser.add_argument('--val-percentage', type=float, default=.2, help='idfk')
-# Other configuration
-parser.add_argument('--no-cuda', action='store_true', default=False,
-                    help='disables CUDA training')
-parser.add_argument('--seed', type=int, default=1, metavar='S',
-                    help='random seed (default: 1)')
-parser.add_argument('--test-batch-size', type=int, default=512, metavar='N',
-                    help='input batch size for testing (default: 1000)')
-parser.add_argument('--log-interval', type=int, default=10, metavar='N',
-                    help='number of batches between logging train status')
-parser.add_argument('--cifar10-dir', default='data',
-                    help='directory that contains cifar-10-batches-py/ '
-                         '(downloaded automatically if necessary)')
-args = parser.parse_args()
-args.cuda = not args.no_cuda and torch.cuda.is_available()
-torch.manual_seed(args.seed)
-if args.cuda:
-    torch.cuda.manual_seed(args.seed)
-'''
-
+    def log_line(self, line):
+        with open(self.log_file, "a+") as f:
+            f.write(str(line) + "\n")
 

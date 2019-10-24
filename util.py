@@ -1,6 +1,7 @@
 import torchvision.models as models
 from torch.utils.model_zoo import load_url
-from torch import nn
+from torch import nn, save, load
+import os
 
 
 def get_trainable_layers(model):
@@ -25,9 +26,19 @@ def load_alexnet(num_classes):
 
 def load_squeezenet(num_classes):
     url = "https://download.pytorch.org/models/squeezenet1_1-f364aa15.pth"
-    model = models.SqueezeNet()
+    model = models.SqueezeNet(version=1.1)
     state_dict = load_url(url, progress=True)
     model.load_state_dict(state_dict)
     model.classifier[1] = nn.Conv2d(512, num_classes, kernel_size=1)
     return model
-    
+
+def full_save(model, optimizer, id, session):
+    try: os.mkdir(str(session))
+    except: pass
+    data = {"model":model.state_dict(), "optim":optimizer.state_dict()}
+    save(data, os.path.join(str(session), str(id) + ".pt"))
+
+def full_load(model, optimizer, id, session):
+    state_dict = load(os.path.join(str(session), str(id) + ".pt"))
+    model.load_state_dict(state_dict["model"])
+    optimizer.load_state_dict(state_dict["optim"])

@@ -12,6 +12,7 @@ class EarlyStopping:
 
     def update(self, val_loss, model, optimizer):
         if self.best_val_loss == np.inf or self.best_val_loss > val_loss:
+            if self.verbose: print(f'Validation loss decreased ({self.best_val_loss:.6f} --> {val_loss:.6f}).')
             self.save_checkpoint(val_loss, model, optimizer)
             self.best_val_loss = val_loss
             self.counter = 0
@@ -24,7 +25,5 @@ class EarlyStopping:
 
     def save_checkpoint(self, val_loss, model, optimizer):
         '''Saves model when validation loss decrease.'''
-        if self.verbose:
-            print(f'Validation loss decreased ({self.best_val_loss:.6f} --> {val_loss:.6f}).')
         torch.save(model.state_dict(), 'checkpoint.pt')
         torch.save(optimizer.state_dict(), 'optimizer.pt')
