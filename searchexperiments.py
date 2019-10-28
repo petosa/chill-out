@@ -2,6 +2,8 @@ from searcher.env.knapsack import Knapsack
 from searcher.env.intspace import IntSpace
 from searcher.env.gmn import GuessMyNumbers
 from searcher.env.maze import Maze
+from searcher.env.digdown import DigDown
+
 
 from searcher.search.greedy import Greedy
 from searcher.search.bfs import BFS
@@ -32,7 +34,7 @@ def experiment(searches, env, iter):
             current_best = val if current_best is None else min(current_best,val)
             all_visited.append(state)
             log[key].append(-current_best)
-        e.visualize(all_visited, title=algo.__class__.__name__ + " " + str({k:v for k,v in args.items() if k != "env"}), delay=0)
+        #e.visualize(all_visited, title=algo.__class__.__name__ + " " + str({k:v for k,v in args.items() if k != "env"}), delay=0)
 
     searches = sorted(searches, key=lambda s: -len(log[str(s[0]) + str(s[1])]))
     for s, args in searches:
@@ -51,7 +53,8 @@ if __name__ == "__main__":
 
 
     seed=3
-    searches = [(BestFirst, {"sample":i,"seed":seed}) for i in range(1,5)]
+    searches = [(BestFirst, {"sample":.3, "seed":0})]
+    searches += [(Beam, {"sample":.3,"beam_size":i*3, "seed":0}) for i in range(1,5)]
     '''
     searches = [
         #(BFS, {"sample":10}), 
@@ -68,6 +71,6 @@ if __name__ == "__main__":
     ]
     '''
 
-    env = Maze(30,30)
+    env = DigDown()
 
-    experiment(searches, env, 500)
+    experiment(searches, env, 5000)
