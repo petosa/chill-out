@@ -13,9 +13,7 @@ import numpy as np
 import torch.nn.functional as F
 import torch.optim as optim
 
-from policies.gradual_unfreezing import get_gradual_unfreezing_policy
-from policies.chain_thaw import get_chain_thaw_policy
-from pytorchtools import EarlyStopping
+from util import EarlyStopping
 
 
 def seed_torch(seed=0):
@@ -56,7 +54,7 @@ class Trainer:
         trainset = torchvision.datasets.CIFAR10(datapath, train=True, download=True, transform=transform)
         idx = list(range(len(trainset)))
         np.random.shuffle(idx)
-        idx = idx[:5000]
+        idx = idx[:1000]
         val_percentage = self.val_percentage
         split_idx = int(val_percentage*len(idx))
         val_idx = idx[-split_idx:]
@@ -82,7 +80,7 @@ class Trainer:
         self.criterion = F.cross_entropy
 
 
-    def train(self, model, optimizer, source, destination, policy_step, patience=2):
+    def train(self, model, optimizer, source, destination, policy_step, patience=3):
 
         self.log_line("Model {}, policy step {}.".format(source, policy_step))
         util.full_load(model, optimizer, source, self.session)
@@ -99,15 +97,28 @@ class Trainer:
         
         early_stopping = EarlyStopping(patience=patience, verbose=True)
 
-        #import torch
-        #optimizer = torch.optim.SGD(model.parameters(), 1e-7, momentum=0.9, nesterov=True, weight_decay=1e-4)
-        #lr_finder = LRFinder(model, optimizer, self.criterion, device="cuda")
-        #lr_finder.range_test(self.train_loader, end_lr=1e-1, num_iter=30)
-        #hist = np.array(lr_finder.history["loss"])
-        #lrs = np.array(lr_finder.history["lr"])
-        #ind = np.argmax(hist[:-1]-hist[1:]) + 1
-        #print("Found best learning rate: ", lrs[ind])
-        #optimizer = torch.optim.SGD(model.parameters(), lrs[ind], momentum=0.9, nesterov=True, weight_decay=1e-4)
+
+        import torch
+        optimizer = torch.optim.SGD(model.parameters(), 1e-4, momentum=0.9, nesterov=True, weight_decay=1e-4)
+        lr_finder = LRFinder(model, optimizer, self.criterion, device="cuda")
+        lr_finder.range_test(self.train_loader, end_lr=1e-1, num_iter=60, smooth_f=0.05, diverge_th=3)
+        hist = np.array(lr_finder.history["loss"])
+        lrs = np.array(lr_finder.history["lr"])
+        best_lr = lrs[np.argmin(hist)]/3
+
+        import matplotlib.pyplot as plt
+        plt.plot(lrs, hist)
+        plt.axvline(best_lr)
+        plt.xscale("log")
+        plt.legend()
+        plt.show()
+        
+        print("Found best learning rate: ", best_lr)
+        self.log_line("Selected learning rate of {}.".format(best_lr))
+        lr_finder.reset()
+
+        #optimizer = torch.optim.Adam(model.parameters(),lr=1e-4, weight_decay=1e-4)
+        optimizer = torch.optim.SGD(model.parameters(), best_lr, momentum=0.9, nesterov=True, weight_decay=1e-4)
 
         epoch = 1
         while True:
@@ -139,18 +150,15 @@ class Trainer:
             epoch += 1
         
 
-        state_dict = torch.load('checkpoint.pt')
-        model.load_state_dict(state_dict)
-
-        optim_state_dict = torch.load('optimizer.pt')
-        optimizer.load_state_dict(optim_state_dict)
+        model.load_state_dict(early_stopping.best_model)
+        optimizer.load_state_dict(early_stopping.best_optim)
 
         util.full_save(model, optimizer, destination, self.session)
 
         if self.verbose:
             print("Saved model: {}".format(os.path.join(self.session, str(destination) + ".pt")))
 
-        self.log_line("Model saved at {}".format(os.path.join(self.session, str(source) + ".pt")))
+        self.log_line("Model saved at {}".format(os.path.join(self.session, str(destination) + ".pt")))
         self.log_line("Final Valid Loss: {:.6f}, Final Valid Acc: {}".format(val_loss, val_acc))
 
         return val_loss

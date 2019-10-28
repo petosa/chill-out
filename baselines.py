@@ -15,7 +15,7 @@ model  = util.load_alexnet(10)
 trainable_layers = util.get_trainable_layers(model)
 print(len(trainable_layers))
 #optimizer = torch.optim.Adam(model.parameters(), weight_decay=1e-3)
-optimizer = torch.optim.SGD(model.parameters(), 1e-4, momentum=0.9, nesterov=True, weight_decay=1e-4)
+optimizer = torch.optim.SGD(model.parameters(), 1e-3, momentum=0.9, nesterov=True, weight_decay=1e-4)
 
 modelid = 0
 util.full_save(model, optimizer, modelid, session)
@@ -29,7 +29,7 @@ if pol == "gu":
 elif pol == "ct":
     policy = get_chain_thaw_policy()
 elif pol == "uf":
-    policy = [[True]*8]
+    policy = [[True]*8]*10
 else:
     quit()
  

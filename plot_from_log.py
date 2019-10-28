@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 
 regex = r'[0-9]+\,[0-9]*\.?[0-9]+\,[0-9]+\,[0-9]*\.?[0-9]+\,[0-9]+'
 loss_line = re.compile(regex)
-#files = ['small_unfrozen.log', 'small_chain_thaw.log', 'small_gradual_unfreezing.log']
-files = [ 'small_gradual_unfreezing.log', "small_unfrozen.log"]
+files = ['unfrozen.log', 'chain_thaw.log', 'gradual_unfreezing.log']
+#files = [ 'small_gradual_unfreezing.log', "small_unfrozen.log"]
 
 fig = plt.figure()
 
@@ -29,7 +29,7 @@ for i, filename in enumerate(files):
 
 plt.title('All Loss')
 plt.ylabel('loss')
-plt.ylim((0, 1))
+#plt.ylim((0, 1))
 plt.legend(loc = 'upper left')
 fig.savefig('all_loss.png')
 
