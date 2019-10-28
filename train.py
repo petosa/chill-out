@@ -101,17 +101,19 @@ class Trainer:
         import torch
         optimizer = torch.optim.SGD(model.parameters(), 1e-4, momentum=0.9, nesterov=True, weight_decay=1e-4)
         lr_finder = LRFinder(model, optimizer, self.criterion, device="cuda")
-        lr_finder.range_test(self.train_loader, end_lr=1e-1, num_iter=60, smooth_f=0.05, diverge_th=3)
+        lr_finder.range_test(self.train_loader, end_lr=1e-1, num_iter=60, smooth_f=0.0, diverge_th=3)
         hist = np.array(lr_finder.history["loss"])
         lrs = np.array(lr_finder.history["lr"])
         best_lr = lrs[np.argmin(hist)]/3
 
+        '''
         import matplotlib.pyplot as plt
         plt.plot(lrs, hist)
         plt.axvline(best_lr)
         plt.xscale("log")
         plt.legend()
         plt.show()
+        '''
         
         print("Found best learning rate: ", best_lr)
         self.log_line("Selected learning rate of {}.".format(best_lr))

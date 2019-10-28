@@ -2,15 +2,18 @@ import re
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import sys
 
 regex = r'[0-9]+\,[0-9]*\.?[0-9]+\,[0-9]+\,[0-9]*\.?[0-9]+\,[0-9]+'
 loss_line = re.compile(regex)
-files = ['unfrozen.log', 'chain_thaw.log', 'gradual_unfreezing.log']
+files = ['unfrozen', 'chain_thaw', 'gradual_unfreezing']
 #files = [ 'small_gradual_unfreezing.log', "small_unfrozen.log"]
 
 fig = plt.figure()
 
 for i, filename in enumerate(files):
+    if len(sys.argv)==2: filename = filename + "_{}.log".format(sys.argv[1])
+    else: filename = filename + ".log"
     train_losses = []
     train_accs = []
     val_losses = []
@@ -31,7 +34,7 @@ plt.title('All Loss')
 plt.ylabel('loss')
 #plt.ylim((0, 1))
 plt.legend(loc = 'upper left')
-fig.savefig('all_loss.png')
+fig.savefig('all_loss.png') if len(sys.argv)!=2 else fig.savefig("all_loss_{}.png".format(sys.argv[1]))
 
 # plt.plot(train_losses, label='train', color='blue')
 # plt.plot(val_losses, label='val', color='orange')

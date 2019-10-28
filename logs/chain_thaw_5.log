@@ -1,0 +1,97 @@
+num_epoch, train_loss, train_acc, valid loss, valid_test
+Model 0, policy step [False, False, False, False, False, False, False, True].
+Selected learning rate of 0.007462403795227799.
+1,1.993781,29,2.072460,26
+2,1.283842,52,1.293201,51
+3,1.036812,65,1.127368,63
+4,0.941533,69,1.122499,64
+5,1.021156,63,1.300901,57
+6,0.894239,67,1.178621,63
+7,0.762897,74,1.049877,66
+8,0.688148,76,0.997509,67
+9,0.722423,73,1.059766,62
+10,0.603236,80,0.984748,69
+11,0.538413,81,0.931946,69
+12,0.798770,72,1.186976,67
+13,0.573660,77,1.004711,67
+14,0.485333,82,0.891394,70
+15,0.456815,85,0.957680,68
+16,0.429067,85,0.895677,71
+17,0.456306,84,1.016420,66
+Model saved at 1572293736/1.pt
+Final Valid Loss: 1.016420, Final Valid Acc: 66
+Model 1, policy step [True, False, False, False, False, False, False, False].
+Selected learning rate of 0.0009394609770881513.
+1,0.459884,83,0.855020,71
+2,0.450415,84,0.856740,72
+3,0.436740,85,0.844366,72
+4,0.434028,85,0.861812,73
+5,0.436421,86,0.886477,72
+6,0.421469,86,0.865001,73
+Model saved at 1572293736/2.pt
+Final Valid Loss: 0.865001, Final Valid Acc: 73
+Model 2, policy step [False, True, False, False, False, False, False, False].
+Selected learning rate of 0.0026477607824142713.
+1,0.411334,86,0.823441,71
+2,0.455502,83,0.815154,73
+3,0.421641,85,0.870295,69
+4,0.429171,85,0.873262,76
+5,0.356086,89,0.785976,75
+6,0.343151,89,0.760333,76
+7,0.367474,88,0.826782,75
+8,0.330902,89,0.822467,75
+9,0.363409,89,0.822715,75
+Model saved at 1572293736/3.pt
+Final Valid Loss: 0.822715, Final Valid Acc: 75
+Model 3, policy step [False, False, True, False, False, False, False, False].
+Selected learning rate of 0.0005927598033463078.
+1,0.329964,90,0.761868,76
+2,0.324826,89,0.770010,77
+3,0.314471,90,0.771493,77
+4,0.309181,90,0.766660,77
+Model saved at 1572293736/4.pt
+Final Valid Loss: 0.766660, Final Valid Acc: 77
+Model 4, policy step [False, False, False, True, False, False, False, False].
+Selected learning rate of 3.740061514339878e-05.
+1,0.329719,90,0.762017,76
+2,0.329347,90,0.762178,76
+3,0.328949,89,0.762343,76
+4,0.328410,90,0.762633,76
+Model saved at 1572293736/5.pt
+Final Valid Loss: 0.762633, Final Valid Acc: 76
+Model 5, policy step [False, False, False, False, True, False, False, False].
+Selected learning rate of 0.03333333333333333.
+1,0.472701,86,1.055695,70
+2,0.324922,90,0.746554,74
+3,0.358135,87,0.832277,69
+4,0.238498,92,0.827075,73
+5,0.218391,94,0.899605,74
+Model saved at 1572293736/6.pt
+Final Valid Loss: 0.899605, Final Valid Acc: 74
+Model 6, policy step [False, False, False, False, False, True, False, False].
+Selected learning rate of 0.03333333333333333.
+1,0.268092,92,0.807646,78
+2,0.229617,94,0.798413,79
+3,0.198600,96,0.758654,77
+4,0.172788,96,0.780330,78
+5,0.159475,96,0.807232,76
+6,0.127838,98,0.789916,76
+Model saved at 1572293736/7.pt
+Final Valid Loss: 0.789916, Final Valid Acc: 76
+Model 7, policy step [False, False, False, False, False, False, True, False].
+Selected learning rate of 0.029708364604458175.
+1,0.182585,96,0.758956,76
+2,0.213087,93,0.822457,73
+3,0.151629,97,0.821391,77
+4,0.156283,96,0.831801,77
+Model saved at 1572293736/8.pt
+Final Valid Loss: 0.831801, Final Valid Acc: 77
+Model 8, policy step [True, True, True, True, True, True, True, True].
+Selected learning rate of 0.00074624037952278.
+1,0.187915,96,0.785292,76
+2,0.168409,96,0.772701,79
+3,0.161858,97,0.781148,77
+4,0.155566,96,0.790051,77
+5,0.140005,97,0.794158,79
+Model saved at 1572293736/9.pt
+Final Valid Loss: 0.794158, Final Valid Acc: 79
