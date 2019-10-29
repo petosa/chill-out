@@ -5,16 +5,14 @@ import matplotlib.animation as animation
 
 session = sys.argv[1]
 log = session + "/log.txt"
+policy = None
 for l in open(log, "r"):
     l = l.replace("\n","")
     if l.startswith("("):
-        tuples = l[1:-1]
-        tuples = tuples.split("->")
-        for t in tuples:
-            print(t)
-        print()
+        tuples = l.split("->")
+        policy = [eval(t)[0] for t in tuples]
         
-policy = [[True, False, False, True], [False, False, False, True]]
+for p in policy: print(p)
 
 lwidth, lheight = 40, 10
 
@@ -31,5 +29,5 @@ def animate(i):
     img.set_data(canvas)
     return img,
 
-ani = animation.FuncAnimation(fig, animate, interval=400, blit=True, save_count=0, frames=len(policy), repeat=False)
+ani = animation.FuncAnimation(fig, animate, interval=800, blit=True, save_count=0, frames=len(policy), repeat=False)
 plt.show()
