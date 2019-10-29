@@ -36,14 +36,13 @@ class PolicyEnv(Environment):
         
         is_root = state[1] == 0
         if not is_root:
-            #current_loss = self.evaluate(state)
-            current_loss = self.trainer.train(self.model, self.optimizer, state[2], state[1], state[0])
+            current_loss = self.evaluate(state)
             if current_loss > parent_loss:
                 return [] # Prune
         
         children = [(state[0][0:i] + tuple([not state[0][i]]) + state[0][i+1:], self.model_id + i + 1, state[1]) for i in range(len(state[0]))]
         children.append(((state[0][:], self.model_id + children[-1][1] + 1, state[1])))
-        children = [c for c in children if any(children[0])]
+        children = [c for c in children if any(c[0])]
         self.model_id = children[-1][1]
         return children
         
