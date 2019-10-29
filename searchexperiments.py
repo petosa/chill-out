@@ -34,11 +34,13 @@ def experiment(searches, env, iter):
             state,val = node
             current_best = val if current_best is None else min(current_best,val)
             all_visited.append(state)
+            #print(state, val, e.cache[state[2]], e.cache[state[2]] > val)
             log[key].append(-current_best)
         #e.visualize(all_visited, title=algo.__class__.__name__ + " " + str({k:v for k,v in args.items() if k != "env"}), delay=0)
         
-        for t in algo.trace(state):
-            print(t, e.cache[t[1]], "\n")
+
+        #for t in algo.trace(state):
+        #    print(t, e.cache[t[1]], "\n")
 
     searches = sorted(searches, key=lambda s: -len(log[str(s[0]) + str(s[1])]))
     for s, args in searches:
@@ -57,8 +59,10 @@ if __name__ == "__main__":
 
 
     seed=3
-    searches = [(BestFirst, {"sample":.3, "seed":0})]
-    searches += [(Beam, {"sample":.3,"beam_size":i*3, "seed":0}) for i in range(1,5)]
+    searches = [(BestFirst, {"sample":.5, "seed":0})]
+    searches += [(Beam, {"sample":.5,"beam_size":i*3, "seed":0}) for i in range(1,5)]
+    searches += [(RandomRollout, {})]
+    searches += [(Greedy, {})]
     '''
     searches = [
         #(BFS, {"sample":10}), 
@@ -77,4 +81,4 @@ if __name__ == "__main__":
 
     env = PolicyEnv()
 
-    experiment(searches, env, 5000)
+    experiment(searches, env, 1000)
