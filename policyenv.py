@@ -38,12 +38,15 @@ class PolicyEnv(Environment):
             is_root = True
         if not is_root:
             current_loss = self.evaluate(state)
-            
+
         if not is_root and current_loss > parent_loss :
-            print("pruned")
             return []
         else:
-            children = [(state[0][0:i] + tuple([not state[0][i]]) + state[0][i+1:], self.model_id + i + 1, state[1]) for i in range(len(state[0]))]
+            children = []
+            for i in range(len(state[0])):
+                child = (state[0][0:i] + tuple([not state[0][i]]) + state[0][i+1:], self.model_id + i + 1, state[1])
+                if any(child[0]):
+                    children.append(child)
             children.append(((state[0][:], self.model_id + len(children) + 1, state[1])))
             #print(children)
             self.model_id = self.model_id + len(children)
