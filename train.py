@@ -29,7 +29,7 @@ def seed_torch(seed=0):
 
 class Trainer:
 
-    def __init__(self, session, data_loader, batch_size=256, val_percentage=.2, data_folder="data", no_cuda=False, seed=0, verbose=False):
+    def __init__(self, session, data_loader, batch_size=256, val_percentage=.5, data_folder="data", no_cuda=False, seed=0, verbose=False):
         os.mkdir(str(session))
         self.session = str(session)
         self.verbose = verbose
@@ -54,7 +54,7 @@ class Trainer:
         trainset = torchvision.datasets.CIFAR10(datapath, train=True, download=True, transform=transform)
         idx = list(range(len(trainset)))
         np.random.shuffle(idx)
-        idx = idx[:1000]
+        idx = idx[:2000]
         val_percentage = self.val_percentage
         split_idx = int(val_percentage*len(idx))
         val_idx = idx[-split_idx:]
