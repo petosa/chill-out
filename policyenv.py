@@ -6,7 +6,6 @@ import numpy as np
 from train import *
 from searcher.env.env import Environment
 from util import *
-import torchvision.models as models
 
 class PolicyEnv(Environment):
     # We want to call train on all of the children in get_children and cache the values and return the cached value in evaluate()
@@ -37,8 +36,8 @@ class PolicyEnv(Environment):
         
         is_root = state[1] == 0
         if not is_root:
-            current_loss = self.evaluate(state)
-            #current_loss = self.trainer.train(self.model, self.optimizer, state[2], state[1], state[0])
+            #current_loss = self.evaluate(state)
+            current_loss = self.trainer.train(self.model, self.optimizer, state[2], state[1], state[0])
             if current_loss > parent_loss:
                 return [] # Prune
         
@@ -51,8 +50,8 @@ class PolicyEnv(Environment):
 
     def evaluate(self, state):
         if state[1] not in self.cache:
-            #self.cache[state[1]] = self.trainer.train(self.model, self.optimizer, state[2], state[1], state[0])
-            self.cache[state[1]] = self.cache[state[2]]-(np.random.rand()*2-1)
+            self.cache[state[1]] = self.trainer.train(self.model, self.optimizer, state[2], state[1], state[0])
+            #self.cache[state[1]] = self.cache[state[2]]-(np.random.rand()*2-1)
         return self.cache[state[1]]
 
         
