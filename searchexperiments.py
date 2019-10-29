@@ -3,6 +3,7 @@ from searcher.env.intspace import IntSpace
 from searcher.env.gmn import GuessMyNumbers
 from searcher.env.maze import Maze
 from searcher.env.digdown import DigDown
+from policyenv import PolicyEnv
 
 
 from searcher.search.greedy import Greedy
@@ -35,6 +36,9 @@ def experiment(searches, env, iter):
             all_visited.append(state)
             log[key].append(-current_best)
         #e.visualize(all_visited, title=algo.__class__.__name__ + " " + str({k:v for k,v in args.items() if k != "env"}), delay=0)
+        
+        for t in algo.trace(state):
+            print(t, e.cache[t[1]], "\n")
 
     searches = sorted(searches, key=lambda s: -len(log[str(s[0]) + str(s[1])]))
     for s, args in searches:
@@ -71,6 +75,6 @@ if __name__ == "__main__":
     ]
     '''
 
-    env = DigDown()
+    env = PolicyEnv()
 
     experiment(searches, env, 5000)
