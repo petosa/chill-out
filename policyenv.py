@@ -37,7 +37,7 @@ class PolicyEnv(Environment):
         is_root = state[1] == 0
         if not is_root:
             current_loss = self.evaluate(state)
-            if current_loss > parent_loss:
+            if current_loss >= parent_loss:
                 return [] # Prune
         
         children = [(state[0][0:i] + tuple([not state[0][i]]) + state[0][i+1:], self.model_id + i + 1, state[1]) for i in range(len(state[0]))]

@@ -156,6 +156,7 @@ class Trainer:
         optimizer.load_state_dict(early_stopping.best_optim)
 
         util.full_save(model, optimizer, destination, self.session)
+        val_loss, val_acc = self.evaluate(model, 'val')
 
         if self.verbose:
             print("Saved model: {}".format(os.path.join(self.session, str(destination) + ".pt")))
