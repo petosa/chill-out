@@ -6,7 +6,14 @@ import matplotlib.animation as animation
 session = sys.argv[1]
 log = session + "/log.txt"
 for l in open(log, "r"):
-    print(l)
+    l = l.replace("\n","")
+    if l.startswith("("):
+        tuples = l[1:-1]
+        tuples = tuples.split("->")
+        for t in tuples:
+            print(t)
+        print()
+        
 policy = [[True, False, False, True], [False, False, False, True]]
 
 lwidth, lheight = 40, 10
