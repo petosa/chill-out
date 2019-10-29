@@ -20,5 +20,5 @@ for _ in range(1000000):
     env.trainer.log_line("Iteration {}. Best error: {}".format(iters, v))
     env.trainer.log_line("->".join([str(s) for s in search.trace(s)]))
     env.trainer.log_line("*"*20)
-
+env.trainer.log_line("Completed all tasks.")
 
