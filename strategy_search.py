@@ -1,18 +1,41 @@
 from searcher.search.bestfirst import BestFirst
 from searcher.search.beam import Beam
-from policyenv import PolicyEnv
+from freezer import Freezer
 import util
+import time
 
-env = PolicyEnv()
-search = BestFirst(env)
-search = Beam(env, beam_size=3)
 
+# Hyperparameters
+mode = "full"
+search_algo = Beam
+search_args = {
+    "beam_size": 6,
+    "sample": 30
+}
+
+# Initialize
+session = int(time.time())
+trainer = util.make_trainer(session)
+model = util.make_model()
+env = Freezer(model, trainer, mode=mode)
+search = search_algo(env, **search_args)
+
+# Bookkeeping
+util.copy_config(session, additional_info={
+    "search": {
+        "name": search_algo.__name__,
+        "mode": mode,
+        "args": search_args
+    }
+})
+
+# Search loop
 s, v = None, None
 iters = 0
-for _ in range(1000000):
+while True:
     iters += 1
     pair = search.next()
-    if pair is None: break
+    if pair is None: break # No more nodes to expand
     state, val = pair
     if s is None or val < v:
         s, v = state, val

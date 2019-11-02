@@ -1,0 +1,23 @@
+{
+    "loader": {
+        "name": "load_cifar",
+        "args": {
+            "val_size": 1000,
+            "size_limit": 2000
+        }
+    },
+
+    "trainer": {
+        "args": {
+            "seed": 0
+        }
+    },
+
+    "model": {
+        "name": "load_alexnet",
+        "args": {
+            "num_classes": 10
+        }
+    }
+    
+}

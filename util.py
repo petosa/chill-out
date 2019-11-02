@@ -1,11 +1,16 @@
-import torchvision.models as models
-from torch.utils.model_zoo import load_url
-from torch import nn, save, load
+from torch import save, load
 import numpy as np
 import os
+import torch
+import random
+import json
+import models
+import loaders
+from train import Trainer
 from copy import deepcopy
 
 
+# Returns a list of layer objects from the given model.
 def get_trainable_layers(model):
     layers = []
     for _, w in model.named_children():
@@ -17,39 +22,22 @@ def get_trainable_layers(model):
                     layers.append(w1)
     return layers
 
-
-def load_alexnet(num_classes):
-    url = "https://download.pytorch.org/models/alexnet-owt-4df8aa71.pth"
-    model = models.AlexNet()
-    state_dict = load_url(url, progress=True)
-    model.load_state_dict(state_dict)
-    model.classifier[6] = nn.Linear(model.classifier[6].in_features,num_classes)
-    return model
-
-def load_squeezenet(num_classes):
-    url = "https://download.pytorch.org/models/squeezenet1_1-f364aa15.pth"
-    model = models.SqueezeNet(version=1.1)
-    state_dict = load_url(url, progress=True)
-    model.load_state_dict(state_dict)
-    model.classifier[1] = nn.Conv2d(512, num_classes, kernel_size=1)
-    return model
-
-def full_save(model, optimizer, id, session):
+# Save a model with a given ID to the given session folder.
+def full_save(model, id, session):
     try: os.mkdir(str(session))
     except: pass
-    data = {"model":model.state_dict(), "optim":optimizer.state_dict()}
+    data = {"model":model.state_dict()}
     save(data, os.path.join(str(session), str(id) + ".pt"))
 
-def full_load(model, optimizer, id, session):
+# Load a model with a given ID from the given session folder.
+def full_load(model, id, session):
     state_dict = load(os.path.join(str(session), str(id) + ".pt"))
     model.load_state_dict(state_dict["model"])
-    optimizer.load_state_dict(state_dict["optim"])
 
-
+# Class for determining once error has been increasing for too many iterations, remembers last best model weights before divergence.
 class EarlyStopping:
-    def __init__(self, patience=7, verbose=False, delta=0):
+    def __init__(self, patience, verbose=False, delta=0):
         self.best_model = None
-        self.best_optim = None
         self.patience = patience
         self.verbose = verbose
         self.counter = 0
@@ -57,19 +45,48 @@ class EarlyStopping:
         self.early_stop = False
         self.delta = delta
 
-    def update(self, val_loss, model, optimizer):
-        if self.best_val_loss == np.inf or self.best_val_loss > val_loss:
+    def update(self, val_loss, model):
+        if self.best_val_loss > val_loss + self.delta:
             if self.verbose: print(f'Validation loss decreased ({self.best_val_loss:.6f} --> {val_loss:.6f}).')
             self.best_val_loss = val_loss
-            self.save_checkpoint(val_loss, model, optimizer)
+            self.save_checkpoint(val_loss, model)
             self.counter = 0
         else:
             self.counter += 1
-            print(f'EarlyStopping counter: {self.counter} out of {self.patience}')
+            if self.verbose: print(f'EarlyStopping counter: {self.counter} out of {self.patience}')
             if self.counter >= self.patience:
                 self.early_stop = True
             
-    def save_checkpoint(self, val_loss, model, optimizer):
-        '''Saves model when validation loss decrease.'''
+    def save_checkpoint(self, val_loss, model):
         self.best_model = deepcopy(model.state_dict())
-        self.best_optim = deepcopy(optimizer.state_dict())
+
+# Seeds all aspects for torch execution.
+def seed_torch(seed=0):
+    random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed) # if you are using multi-GPU.
+    torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.deterministic = True
+
+# Creates a Trainer object from the config.json file.
+def make_trainer(session):
+    config = json.load(open("config.json", "r"))
+    loader = lambda : getattr(loaders, config["loader"]["name"])(**config["loader"]["args"])
+    return Trainer(session, loader, **config["trainer"]["args"])
+
+# Creates a model from the config.json file.
+def make_model():
+    config = json.load(open("config.json", "r"))
+    return getattr(models, config["model"]["name"])(**config["model"]["args"])
+
+# Makes a copy of a config into a session folder for logging purposes.
+def copy_config(session, additional_info=None):
+    try: os.mkdir(str(session))
+    except: pass
+    config = json.load(open("config.json", "r"))
+    if additional_info is not None:
+        config["additional_info"] = additional_info
+    json.dump(config, open(os.path.join(str(session), "config.json"), "w"), indent=4)
