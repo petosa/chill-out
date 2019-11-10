@@ -2,9 +2,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 import sys
 import matplotlib.animation as animation
+from skimage import io
+import cv2
+from policies import gradual_unfreezing, chain_thaw
 
+
+# Get policy
 session = sys.argv[1]
 log = session + "/log.txt"
+print(log)
 policy = None
 for l in open(log, "r"):
     l = l.replace("\n","")
@@ -12,22 +18,34 @@ for l in open(log, "r"):
         tuples = l.split("->")
         policy = [eval(t)[0] for t in tuples]
         
+if policy is None:
+    policy = [[True]*8]
 for p in policy: print(p)
 
-lwidth, lheight = 40, 10
+# Draw policy
+lwidth, lheight = 700, 200
+layers = len(policy[0])
+canvas = np.zeros((layers*lheight, lwidth, 3))
+url = "https://cdn3.iconfinder.com/data/icons/wpzoom-developer-icon-set/500/102-128.png"
+lock = io.imread(url)[:,:,:-1]
 
-canvas = np.zeros((len(policy[0])*lheight, lwidth, 3))
-fig, ax = plt.subplots()
-img = ax.imshow(canvas, interpolation='nearest')
-plt.xticks([]), plt.yticks([])
-def animate(i):
-    canvas = np.zeros((len(policy[0])*lheight, lwidth, 3))
+def draw(i):
+    canvas = np.zeros((layers*lheight, lwidth, 3))
     p = policy[i]
-    for i in range(len(p)):
-        layer = np.ones((lheight-2, lwidth-2, 3)) * (1 if p[i] else .3)
-        canvas[1+i*lheight:(i+1)*lheight-1,1:lwidth-1,:] = layer
-    img.set_data(canvas)
-    return img,
+    for j in range(len(p)):
+        layer = np.ones((lheight-10, lwidth-2, 3)) * (1 if p[j] else .3)
+        if p[j]: layer[:,:,:-1] *= .3
+        canvas[j*lheight-1:j*lheight+5,1:lwidth-1,:] = 1
+        canvas[5+j*lheight:(j+1)*lheight-5,1:lwidth-1,:] = layer
+        if not p[j]: canvas[35+j*lheight:35+j*lheight+128, 20:148] += lock
+        
+    canvas = canvas/canvas.max()
+    canvas =cv2.putText(np.copy(canvas), text=str(i+1), org=(550,1580),fontFace=2, fontScale=4, color=(1,1,1), thickness=6)
+    return canvas
 
-ani = animation.FuncAnimation(fig, animate, interval=800, blit=True, save_count=0, frames=len(policy), repeat=False)
-plt.show()
+for i in range(len(policy)):
+    img = draw(i)
+    #plt.imsave(img)
+    # plt.show()
+
+    plt.imsave(str(i), img)

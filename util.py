@@ -47,7 +47,7 @@ class EarlyStopping:
 
     def update(self, val_loss, model):
         if self.best_val_loss > val_loss + self.delta:
-            if self.verbose: print(f'Validation loss decreased ({self.best_val_loss:.6f} --> {val_loss:.6f}).')
+            if self.verbose: print(f'Loss decreased ({self.best_val_loss:.6f} --> {val_loss:.6f}).')
             self.best_val_loss = val_loss
             self.save_checkpoint(val_loss, model)
             self.counter = 0

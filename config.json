@@ -2,22 +2,20 @@
     "loader": {
         "name": "load_cifar",
         "args": {
-            "val_size": 1000,
-            "size_limit": 2000
+            "network_train_size": 1000,
+            "search_train_size": 1000
         }
     },
-
     "trainer": {
         "args": {
-            "seed": 0
+            "seed": 321,
+            "fixed_lr": null
         }
     },
-
     "model": {
         "name": "load_alexnet",
         "args": {
             "num_classes": 10
         }
     }
-    
 }
