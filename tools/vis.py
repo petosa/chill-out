@@ -1,10 +1,15 @@
+# Add cwd to script path
+import sys
+import os
+sys.path.append(os.getcwd())
+
 import matplotlib.pyplot as plt
 import numpy as np
-import sys
 import matplotlib.animation as animation
-from skimage import io
 import cv2
-from policies import gradual_unfreezing, chain_thaw
+import util
+
+from skimage import io
 
 
 # Get policy

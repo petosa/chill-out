@@ -7,7 +7,7 @@ import torch.nn.functional as F
 
 
 
-def load_cifar(batch_size=256, network_train_size=.2, search_train_size=.2, data_folder="data"):
+def load_cifar(batch_size=256, network_train_size=.2, search_train_size=.2, data_folder="data", verbose=True):
 
     transform = torchvision.transforms.Compose([
         torchvision.transforms.Resize((224, 224)),
@@ -23,13 +23,15 @@ def load_cifar(batch_size=256, network_train_size=.2, search_train_size=.2, data
     nt_size = int(network_train_size*len(idx)) if network_train_size < 1 else network_train_size
     st_size = int(search_train_size*len(idx)) if search_train_size < 1 else search_train_size
     val_size = len(idx) - nt_size - st_size
-    print("Network train size:", nt_size, "Search train size:", st_size, "Val size:", val_size)
-    print("Total size:", len(idx))
+    if verbose:
+        print("Network train size:", nt_size, "Search train size:", st_size, "Val size:", val_size)
+        print("Total size:", len(idx))
 
     nt_idx = idx[:nt_size]
     st_idx = idx[nt_size:nt_size+st_size]
-    val_idx = idx[nt_size+nt_size:]
-    print("Network train size:", len(nt_idx), "Search train size:", len(st_idx), "Val size:", len(val_idx))
+    val_idx = idx[nt_size+st_size:]
+    if verbose:
+        print("Network train size:", len(nt_idx), "Search train size:", len(st_idx), "Val size:", len(val_idx))
 
     network_train_sampler = SubsetRandomSampler(nt_idx)
     search_train_sampler = SubsetRandomSampler(st_idx)

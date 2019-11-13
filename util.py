@@ -71,22 +71,46 @@ def seed_torch(seed=0):
     torch.backends.cudnn.benchmark = False
     torch.backends.cudnn.deterministic = True
 
+# Loads run configuration
+def load_config(path):
+    return json.load(open(path, "r"))
+
+# Saves run configuration
+def save_config(config, path):
+    json.dump(config, open(path, "w"), indent=4)
+
+# Makes a copy of a config into a session folder for logging purposes.
+def copy_config(config, session, additional_info=None):
+    try: os.mkdir(str(session))
+    except: pass
+    if additional_info is not None:
+        config["additional_info"] = additional_info
+    save_config(config, os.path.join(str(session), "config.json"))
+
 # Creates a Trainer object from the config.json file.
-def make_trainer(session):
-    config = json.load(open("config.json", "r"))
+def make_trainer(config, session):
     loader = lambda : getattr(loaders, config["loader"]["name"])(**config["loader"]["args"])
     return Trainer(session, loader, **config["trainer"]["args"])
 
 # Creates a model from the config.json file.
-def make_model():
-    config = json.load(open("config.json", "r"))
+def make_model(config):
     return getattr(models, config["model"]["name"])(**config["model"]["args"])
 
-# Makes a copy of a config into a session folder for logging purposes.
-def copy_config(session, additional_info=None):
-    try: os.mkdir(str(session))
-    except: pass
-    config = json.load(open("config.json", "r"))
-    if additional_info is not None:
-        config["additional_info"] = additional_info
-    json.dump(config, open(os.path.join(str(session), "config.json"), "w"), indent=4)
+# Generates a chain thaw policy given the number of network layers.
+def get_chain_thaw_policy(n_layers=8):
+    # 1) Freeze every layer except the last (softmax) layer and train it.
+    # 2) Freeze every layer except the first layer and train it.
+    # 3) Freeze every layer except the second etc., until the second last layer.
+    # 4) Unfreeze all layers and train entire model.
+    layers = n_layers
+    policy = [[False]*(layers-1) + [True]]
+    policy += [[False] * (i-1) + [True] + [False] * (layers-i) for i in range(1, layers)]
+    policy.append([True]*layers)
+    return policy
+
+# Generates a gradual unfreezing policy given the number of network layers.
+def get_gradual_unfreezing_policy(n_layers=8):
+    # 1) Freeze every layer except the last (softmax) layer and train it.
+    # 2) Keeping the last layer unfrozen, also unfreeze the second-to-last layer.
+    # 3) Continue until all layers are unfrozen.
+    return [[False]*(n_layers-i) + [True]*i for i in range(1,n_layers+1)]

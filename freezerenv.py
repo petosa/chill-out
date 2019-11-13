@@ -4,7 +4,7 @@ from itertools import permutations
 import util
 
 
-class Freezer(Environment):
+class FreezerEnv(Environment):
 
 
     # We want to call train on all of the children in get_children and cache the values and return the cached value in evaluate()

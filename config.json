@@ -3,13 +3,15 @@
         "name": "load_cifar",
         "args": {
             "network_train_size": 1000,
-            "search_train_size": 1000
+            "search_train_size": 1000,
+            "verbose": true
         }
     },
     "trainer": {
         "args": {
-            "seed": 321,
-            "fixed_lr": null
+            "seed": 8803,
+            "fixed_lr": null,
+            "verbose": true
         }
     },
     "model": {

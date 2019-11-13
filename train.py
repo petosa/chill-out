@@ -56,7 +56,7 @@ class Trainer:
         else:
             best_lr = self.fixed_lr
 
-        print("Found best learning rate: ", best_lr)
+        if self.verbose: print("Found best learning rate: ", best_lr)
         self.log_line("Selected learning rate of {}.".format(best_lr))
         optimizer = torch.optim.SGD(model.parameters(), best_lr, momentum=0.9, nesterov=True, weight_decay=1e-4)
 
@@ -79,7 +79,7 @@ class Trainer:
                 print('Train Epoch: {} NT Loss: {:.6f} ST Loss: {:.6f} ST Acc: {}'.format(epoch, nt_loss, st_loss, st_acc))
             early_stopping.update(st_loss, model)
             if early_stopping.early_stop:
-                print("Early stopping, epoch:", epoch)
+                if self.verbose: print("Early stopping, epoch:", epoch)
                 break
             epoch += 1
         
@@ -122,6 +122,7 @@ class Trainer:
                 n_examples += pred.size(0)
                 if n_batches and (batch_i >= n_batches):
                     break
+        if n_examples == 0: return 0., 0.
         loss /= n_examples
         acc = 100. * correct / n_examples
         return loss, acc
