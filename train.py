@@ -4,7 +4,7 @@ import torch
 import random
 import numpy as np
 import torch.optim as optim
-from torch_lr_finder import LRFinder
+from torch_lr_finder.lr_finder import LRFinder
 import util
 
 
@@ -47,7 +47,7 @@ class Trainer:
         # Find and set best learning rate
         if self.fixed_lr is None:
             optimizer = torch.optim.SGD(model.parameters(), 1e-4, momentum=0.9, nesterov=True, weight_decay=1e-4)
-            lr_finder = LRFinder(model, optimizer, self.criterion, device="cuda" if self.cuda else "cpu")
+            lr_finder = LRFinder(model, optimizer, self.criterion, device="cuda" if self.cuda else "cpu", verbose=False)
             lr_finder.range_test(self.network_train_loader, end_lr=1e-1, num_iter=60, smooth_f=0.0, diverge_th=3)
             hist = np.array(lr_finder.history["loss"])
             lrs = np.array(lr_finder.history["lr"])
@@ -92,7 +92,8 @@ class Trainer:
         self.log_line("Model saved at {}".format(os.path.join(self.session, str(destination) + ".pt")))
         self.log_line("Final ST Loss: {:.6f}, Final ST Acc: {}".format(st_loss, st_acc))
         self.log_line("Final Val Loss: {:.6f}, Final Val Acc: {}".format(val_loss, val_acc))
-
+        
+        torch.cuda.empty_cache()
         return st_loss
 
 

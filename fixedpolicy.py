@@ -10,7 +10,6 @@ def run_policy(policy):
     config = util.load_config("config.json")
     trainer = util.make_trainer(config, session)
     model = util.make_model(config)
-    trainable_layers = util.get_trainable_layers(model)
     util.full_save(model, modelid, session)
 
     # Bookkeeping
@@ -26,3 +25,4 @@ def run_policy(policy):
         trace.append((step, modelid+1, modelid))
         modelid += 1
     trainer.log_line("Trace: " + "->".join([str(s) for s in trace]))
+

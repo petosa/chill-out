@@ -11,27 +11,28 @@ config = util.load_config("config.json")
 
 if sys.argv[1] == "search":
     # Hyperparameters
-    mode = "toggle"
+    mode = "full"
     search_algo = Beam
     search_kwargs = {
-        "beam_size": 24,
-        "sample": None
+        "beam_size": 12,
+        "sample": .1
     }
     run_search(config, mode, search_algo, search_kwargs)
 
 # Train under a fixed policy
 elif sys.argv[1] == "policy":
 
-    model = util.make_model(config)
+    model = util.make_model(config)    
     n_layers = len(util.get_trainable_layers(model))
-    if sys.argv[2] == "gu":
+    if sys.argv[2] == "gu": # Gradual unfreezing
         p = util.get_gradual_unfreezing_policy(n_layers)
-    elif sys.argv[2] == "ct":
+    elif sys.argv[2] == "ct": # Chain thaw
         p = util.get_chain_thaw_policy(n_layers)
-    elif sys.argv[2] == "uf":
+    elif sys.argv[2] == "uf": # Unfrozen
         p = [[True]*n_layers]*8
-    else:
+    else: # Replay
         session, ckpt = sys.argv[2].split("/")
+        parent = session
         with open(os.path.join(session, "log.txt"), "r") as f:
             remember = False
             for l in f:
@@ -43,3 +44,4 @@ elif sys.argv[1] == "policy":
         p = p[1:]
 
     run_policy(p)
+
