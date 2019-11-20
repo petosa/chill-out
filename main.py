@@ -11,13 +11,15 @@ config = util.load_config("config.json")
 
 if sys.argv[1] == "search":
     # Hyperparameters
+    smell_size = 100
     mode = "full"
+    max_depth = 5
     search_algo = Beam
     search_kwargs = {
-        "beam_size": 12,
-        "sample": .1
+        "beam_size": 6,
+        "sample": .2
     }
-    run_search(config, mode, search_algo, search_kwargs)
+    run_search(config, smell_size, mode, max_depth, search_algo, search_kwargs)
 
 # Train under a fixed policy
 elif sys.argv[1] == "policy":

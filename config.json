@@ -2,8 +2,7 @@
     "loader": {
         "name": "load_cifar",
         "args": {
-            "network_train_size": 400,
-            "search_train_size": 100,
+            "train_size": 500,
             "val_size": 10000,
             "verbose": true
         }
