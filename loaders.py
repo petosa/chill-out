@@ -26,10 +26,9 @@ def load_cifar(train_size, val_size, batch_size=256, data_folder="data", verbose
     assert(train_size+val_size <= len(idx))
     if verbose:
         print("Train size:", train_size, "Val size:", val_size)
-        print("Total size:", len(idx))
 
     train_idx = idx[:train_size]
-    val_idx = idx[train_size:train_size+val_size]
+    val_idx = idx[-val_size:]
     if verbose:
         print("Train size:", len(train_idx), "Val size:", len(val_idx))
 

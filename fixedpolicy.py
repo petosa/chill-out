@@ -21,7 +21,7 @@ def run_policy(policy):
     trace = [([False]*len(policy[0]), 0, 0)]
     for step in policy:
         trainer.log_line("Trace: " + "->".join([str(s) for s in trace]))
-        loss = trainer.train(model, modelid, modelid+1, step, train_loader=trainer.train_loader, val_loader=trainer.val_loader, test_loader=trainer.test_loader)
+        loss = trainer.train(model, modelid, modelid+1, step)
         trace.append((step, modelid+1, modelid))
         modelid += 1
     trainer.log_line("Trace: " + "->".join([str(s) for s in trace]))

@@ -11,15 +11,15 @@ config = util.load_config("config.json")
 
 if sys.argv[1] == "search":
     # Hyperparameters
-    smell_size = 100
-    mode = "full"
-    max_depth = 5
+    mode = "toggle"
+    max_depth = None
+    halve = True
     search_algo = Beam
     search_kwargs = {
-        "beam_size": 6,
-        "sample": .2
+        "beam_size": 10,
+        "sample": None
     }
-    run_search(config, smell_size, mode, max_depth, search_algo, search_kwargs)
+    run_search(config, mode, max_depth, halve, search_algo, search_kwargs)
 
 # Train under a fixed policy
 elif sys.argv[1] == "policy":
@@ -33,9 +33,9 @@ elif sys.argv[1] == "policy":
     elif sys.argv[2] == "uf": # Unfrozen
         p = [[True]*n_layers]*8
     else: # Replay
-        session, ckpt = sys.argv[2].split("/")
-        parent = session
-        with open(os.path.join(session, "log.txt"), "r") as f:
+        splitted = sys.argv[2].split("/")
+        session, ckpt = splitted[:-1], splitted[-1]
+        with open(os.path.join("/".join(session), "log.txt"), "r") as f:
             remember = False
             for l in f:
                 if l.startswith("Model saved") and ("/" + ckpt) in l:

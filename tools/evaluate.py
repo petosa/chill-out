@@ -9,8 +9,9 @@ sys.path.append(os.getcwd())
 
 import util
 
-session, ckpt = sys.argv[1].split("/")
-ckpt = int(ckpt.split(".")[0])
+splitted = sys.argv[1].split("/")
+session = "/".join(splitted[:-1])
+ckpt = int(splitted[-1].split(".")[0])
 
 config = util.load_config(os.path.join(session, "config.json"))
 t = util.make_trainer(config, session)

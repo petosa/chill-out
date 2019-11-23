@@ -10,7 +10,7 @@ class FreezerEnv(Environment):
 
 
     # We want to call train on all of the children in get_children and cache the values and return the cached value in evaluate()
-    def __init__(self, model, trainer, smell_size, mode, max_depth):
+    def __init__(self, model, trainer, mode, max_depth):
     
         # Validate mode
         modes = ["toggle", "full"]
@@ -20,7 +20,6 @@ class FreezerEnv(Environment):
         # Class variables
         self.model = model
         self.trainer = trainer
-        self.smell_size = smell_size
         self.mode = mode
         self.max_depth = max_depth
         self.model_id = 0
@@ -33,25 +32,21 @@ class FreezerEnv(Environment):
 
         # Save initial model to disk
         util.full_save(self.model, self.model_id, self.trainer.session)
-
-    
-    def get_train_and_smell_loaders(self):
-        train_idx = self.trainer.train_loader.sampler.indices
-        np.random.shuffle(train_idx)
-        train_idx, smell_idx = train_idx[self.smell_size:], train_idx[:self.smell_size]
-        print("Train_idx", len(train_idx), "smell_idx", len(smell_idx))
-        train_sampler, smell_sampler = SubsetRandomSampler(train_idx), SubsetRandomSampler(smell_idx)
-        dataset, batch_size = self.trainer.train_loader.dataset, self.trainer.train_loader.batch_size
-        train_loader = DataLoader(dataset, batch_size=batch_size, sampler=train_sampler, num_workers=4, pin_memory=True)
-        smell_loader = DataLoader(dataset, batch_size=batch_size, sampler=smell_sampler, num_workers=4, pin_memory=True)
-        return train_loader, smell_loader
         
 
     # Returned children depend on mode.
     def get_children(self, state):
-        
-        if state[3] >= self.max_depth: # Prune
+
+        # Limit depth
+        if self.max_depth is not None and state[3] >= self.max_depth: # Prune
             return []
+
+        # General (non-root) case; if parent's loss is less than our loss, prune.
+        parent_loss = self.cache[state[2]]
+        if not state[1] == 0:
+            current_loss = self.evaluate(state)
+            if current_loss >= parent_loss:
+                return [] # Prune
         
         # Full mode: can set any number of layers.
         if self.mode == "full":
@@ -76,9 +71,7 @@ class FreezerEnv(Environment):
     # Evaluate & cache state, or simply restore state evaluation from cache.
     def evaluate(self, state):
         if state[1] not in self.cache:
-            train_loader, smell_loader = self.get_train_and_smell_loaders()
-            self.cache[state[1]] = self.trainer.train(model=self.model, source=state[2], destination=state[1], freeze_state=state[0],
-                train_loader=train_loader, val_loader=smell_loader, test_loader=self.trainer.val_loader)
+            self.cache[state[1]] = self.trainer.train(model=self.model, source=state[2], destination=state[1], freeze_state=state[0])
         return self.cache[state[1]]
 
         
