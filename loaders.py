@@ -60,7 +60,7 @@ def load_scenes(train_size, val_size, batch_size=256, data_folder="data", verbos
         torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
     ])
 
-    datapath = os.path.join(data_folder, "scene15")
+    datapath = os.path.join(data_folder, "15-Scene")
     dataset = torchvision.datasets.ImageFolder(root=datapath, transform=transform)
     idx = list(range(len(dataset)))
     np.random.shuffle(idx)
@@ -76,7 +76,8 @@ def load_scenes(train_size, val_size, batch_size=256, data_folder="data", verbos
 
     train_idx = idx[:train_size]
     val_idx = idx[train_size:train_size+val_size]
-    test_idx = idx[-test_size]
+    test_idx = idx[-test_size:]
+
     if verbose:
         print("Train size:", len(train_idx), "Val size:", len(val_idx), "Test size:", len(test_idx))
 
