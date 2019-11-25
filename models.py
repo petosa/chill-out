@@ -24,3 +24,11 @@ def load_squeezenet(num_classes, pretrained=True, cuda=True):
     model.classifier[1] = nn.Conv2d(512, num_classes, kernel_size=1)
     model = model.cuda() if cuda else model
     return model
+
+
+# Generate a fresh ResNet model with the given number of output classes.
+def load_resnet(num_classes, pretrained=True, cuda=True):
+    model = models.resnet.resnet18(pretrained=pretrained)
+    model.fc = nn.Linear(512, num_classes)
+    model = model.cuda() if cuda else model
+    return model

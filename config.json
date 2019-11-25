@@ -2,7 +2,7 @@
   "loader": {
     "name": "load_cifar",
     "args": {
-      "train_size": 500,
+      "train_size": 0,
       "val_size": 10000,
       "verbose": true
     }
@@ -15,7 +15,7 @@
     }
   },
   "model": {
-    "name": "load_alexnet",
+    "name": "load_resnet",
     "args": {
       "num_classes": 10
     }
