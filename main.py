@@ -7,7 +7,7 @@ import sys
 import os
 import time
 
-config = util.load_config("config_scenes.json")
+config = util.load_config("config.json")
 
 if sys.argv[1] == "search":
     # Hyperparameters

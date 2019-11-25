@@ -67,16 +67,15 @@ def load_scenes(train_size, val_size, batch_size=256, data_folder="data", verbos
 
     train_size = int(train_size*len(idx)) if train_size < 1 else train_size
     val_size = int(val_size*len(idx)) if val_size < 1 else val_size
-    test_size = len(dataset)-train_size-val_size
+    test_size = val_size
     
-    assert(train_size+val_size <= len(idx))
-    assert(test_size > 0)
+    assert(train_size+val_size+test_size <= len(idx))
     if verbose:
         print("Train size:", train_size, "Val size:", val_size, "Test size:", test_size)
 
     train_idx = idx[:train_size]
-    val_idx = idx[train_size:train_size+val_size]
-    test_idx = idx[-test_size:]
+    val_idx = idx[-(val_size+test_size):-test_size]
+    test_idx = idx[-test_size:]    
 
     if verbose:
         print("Train size:", len(train_idx), "Val size:", len(val_idx), "Test size:", len(test_idx))

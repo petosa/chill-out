@@ -1,9 +1,14 @@
 {
   "loader": {
-    "name": "load_cifar",
+    "name": "load_scenes",
     "args": {
+<<<<<<< HEAD
       "train_size": 0,
       "val_size": 10000,
+=======
+      "train_size": 500,
+      "val_size": 747,
+>>>>>>> fix indexing
       "verbose": true
     }
   },
@@ -17,7 +22,7 @@
   "model": {
     "name": "load_resnet",
     "args": {
-      "num_classes": 10
+      "num_classes": 15
     }
   }
 }
