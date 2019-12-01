@@ -28,7 +28,7 @@ if policy is None:
 for p in policy: print(p)
 
 # Draw policy
-lwidth, lheight = 700, 200
+lwidth, lheight = 1000, 200
 layers = len(policy[0])
 canvas = np.zeros((layers*lheight, lwidth, 3))
 url = "https://cdn3.iconfinder.com/data/icons/wpzoom-developer-icon-set/500/102-128.png"
@@ -39,18 +39,26 @@ def draw(i):
     p = policy[i]
     for j in range(len(p)):
         layer = np.ones((lheight-10, lwidth-2, 3)) * (1 if p[j] else .3)
-        if p[j]: layer[:,:,:-1] *= .3
+        if p[j]: layer[:,:,1:] *= .3
         canvas[j*lheight-1:j*lheight+5,1:lwidth-1,:] = 1
         canvas[5+j*lheight:(j+1)*lheight-5,1:lwidth-1,:] = layer
         if not p[j]: canvas[35+j*lheight:35+j*lheight+128, 20:148] += lock
         
     canvas = canvas/canvas.max()
-    canvas =cv2.putText(np.copy(canvas), text=str(i+1), org=(550,1580),fontFace=2, fontScale=4, color=(1,1,1), thickness=6)
+    canvas =cv2.putText(np.copy(canvas), text=str(i+1), org=(830,layers*lheight-20),fontFace=2, fontScale=4, color=(1,1,1), thickness=6)
     return canvas
 
-for i in range(len(policy)):
-    img = draw(i)
-    #plt.imsave(img)
-    # plt.show()
 
-    plt.imsave(str(i), img)
+# Create guf
+import imageio
+max_steps=16
+seconds=10
+
+images = []
+for i in range(min(len(policy), max_steps)):
+    images.append(draw(i))
+
+print(max_steps-len(images))
+images.extend([images[-1]]*(max_steps-len(images)))
+print(len(images))
+imageio.mimsave('policy.gif', images, duration=seconds/max_steps)
